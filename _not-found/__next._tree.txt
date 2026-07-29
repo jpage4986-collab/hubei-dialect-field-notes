@@ -1,2 +1,2 @@
-:HL["/hubei-dialect-field-notes/_next/static/css/772e951d5ed5d4aa.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"soPsy8zraxTj6OcUNwFyz"}
+:HL["/hubei-dialect-field-notes/_next/static/css/dd0a84a353e6876f.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"fl3U0ZLpPdOMmYnc_-mCk"}
