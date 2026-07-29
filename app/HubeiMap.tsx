@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { geoMercator } from "d3-geo";
+import ResearchExhibit, { type ExhibitKind } from "./ResearchExhibit";
 
 type Position = [number, number];
 type CityFeature = {
@@ -36,6 +37,7 @@ export default function HubeiMap() {
   const focusRef = useRef<(name: string | null) => void>(() => undefined);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<ExhibitKind | null>(null);
   const selectedRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -129,6 +131,7 @@ export default function HubeiMap() {
     let pointerDown = { x: 0, y: 0 };
 
     const setFocus = (name: string | null) => {
+      setActiveSection(null);
       setSelected(name);
       selectedRef.current = name;
       if (!name) {
@@ -434,31 +437,41 @@ export default function HubeiMap() {
               <strong>{story.focus}</strong>
             </div>
             <div className="result-list">
-              <article>
+              <button className="result-entry" type="button" onClick={() => setActiveSection("audio")}>
                 <span>01</span>
                 <div>
                   <h3>声音档案</h3>
                   <p>自然对话、方言词表与地方叙事录音</p>
                 </div>
-              </article>
-              <article>
+                <i aria-hidden="true">↗</i>
+              </button>
+              <button className="result-entry" type="button" onClick={() => setActiveSection("dialect")}>
                 <span>02</span>
                 <div>
                   <h3>方言观察</h3>
                   <p>语音特点、地方词汇与代际使用差异</p>
                 </div>
-              </article>
-              <article>
+                <i aria-hidden="true">↗</i>
+              </button>
+              <button className="result-entry" type="button" onClick={() => setActiveSection("field")}>
                 <span>03</span>
                 <div>
                   <h3>田野手记</h3>
                   <p>城市生活、乡土文化与口述记忆</p>
                 </div>
-              </article>
+                <i aria-hidden="true">↗</i>
+              </button>
             </div>
           </>
         )}
       </aside>
+      {selected && activeSection && (
+        <ResearchExhibit
+          city={selected}
+          kind={activeSection}
+          onClose={() => setActiveSection(null)}
+        />
+      )}
     </div>
   );
 }
