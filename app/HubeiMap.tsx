@@ -139,7 +139,8 @@ export default function HubeiMap() {
     focusRef.current = setFocus;
 
     const buildMap = async () => {
-      const response = await fetch("/hubei-cities.json");
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+      const response = await fetch(`${basePath}/hubei-cities.json`);
       const data = (await response.json()) as CityCollection;
       if (disposed) return;
 
