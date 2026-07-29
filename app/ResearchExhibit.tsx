@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import * as THREE from "three";
+import { ThreeDialectDial, ThreeFanGallery } from "./ThreeArtifacts";
 
 export type ExhibitKind = "audio" | "dialect" | "field";
 
@@ -242,6 +243,12 @@ function BambooFlute() {
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
+    const baseFluteRotation = new THREE.Vector2(0, -0.08);
+    const targetFluteRotation = baseFluteRotation.clone();
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragDistance = 0;
     const holes: THREE.Mesh[] = [];
     const glows: THREE.PointLight[] = [];
     const holeX = [-3.1, -1.9, -0.7, 0.7, 1.9, 3.1];
@@ -269,15 +276,52 @@ function BambooFlute() {
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     };
-    const onMove = (event: PointerEvent) => updatePointer(event);
-    const onClick = (event: PointerEvent) => {
+    const onDown = (event: PointerEvent) => {
+      isDragging = true;
+      dragDistance = 0;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
       updatePointer(event);
-      raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(holes, false)[0];
-      if (hit) toggleHole(hit.object.userData.index as number);
     };
+    const onMove = (event: PointerEvent) => {
+      updatePointer(event);
+      if (!isDragging) return;
+      const dx = event.clientX - dragStartX;
+      const dy = event.clientY - dragStartY;
+      dragDistance = Math.max(dragDistance, Math.hypot(dx, dy));
+      targetFluteRotation.set(
+        THREE.MathUtils.clamp(dy * 0.004, -0.38, 0.38),
+        THREE.MathUtils.clamp(baseFluteRotation.y + dx * 0.0045, -0.62, 0.46),
+      );
+    };
+    const onUp = (event: PointerEvent) => {
+      updatePointer(event);
+      if (dragDistance < 7) {
+        raycaster.setFromCamera(pointer, camera);
+        const hit = raycaster.intersectObjects(holes, false)[0];
+        if (hit) toggleHole(hit.object.userData.index as number);
+      }
+      isDragging = false;
+      targetFluteRotation.copy(baseFluteRotation);
+      renderer.domElement.releasePointerCapture(event.pointerId);
+    };
+    const onLeave = () => {
+      isDragging = false;
+      targetFluteRotation.copy(baseFluteRotation);
+    };
+    const onHover = () => {
+      raycaster.setFromCamera(pointer, camera);
+      renderer.domElement.style.cursor = isDragging
+        ? "grabbing"
+        : raycaster.intersectObjects(holes, false)[0]
+          ? "pointer"
+          : "grab";
+    };
+    renderer.domElement.addEventListener("pointerdown", onDown);
     renderer.domElement.addEventListener("pointermove", onMove);
-    renderer.domElement.addEventListener("click", onClick);
+    renderer.domElement.addEventListener("pointerup", onUp);
+    renderer.domElement.addEventListener("pointerleave", onLeave);
 
     const resize = () => {
       const width = mount.clientWidth;
@@ -297,7 +341,7 @@ function BambooFlute() {
       const time = clock.getElapsedTime();
       raycaster.setFromCamera(pointer, camera);
       const hovered = raycaster.intersectObjects(holes, false)[0]?.object ?? null;
-      renderer.domElement.style.cursor = hovered ? "pointer" : "default";
+      if (!isDragging) renderer.domElement.style.cursor = hovered ? "pointer" : "grab";
       holes.forEach((hole, index) => {
         const material = hole.material as THREE.MeshStandardMaterial;
         const lit = bitsRef.current[index] === 1;
@@ -308,7 +352,12 @@ function BambooFlute() {
         hole.scale.setScalar(pulse);
         glows[index].intensity += ((active && lit ? 16 : lit ? 5 : 0) - glows[index].intensity) * 0.11;
       });
-      flute.rotation.x = Math.sin(time * 0.28) * 0.018;
+      flute.rotation.x +=
+        (targetFluteRotation.x + Math.sin(time * 0.28) * 0.008 - flute.rotation.x) *
+        (isDragging ? 0.17 : 0.075);
+      flute.rotation.y +=
+        (targetFluteRotation.y - flute.rotation.y) * (isDragging ? 0.17 : 0.075);
+      onHover();
       renderer.render(scene, camera);
     };
     animate();
@@ -317,8 +366,10 @@ function BambooFlute() {
       cancelAnimationFrame(frame);
       observer.disconnect();
       timersRef.current.forEach(clearTimeout);
+      renderer.domElement.removeEventListener("pointerdown", onDown);
       renderer.domElement.removeEventListener("pointermove", onMove);
-      renderer.domElement.removeEventListener("click", onClick);
+      renderer.domElement.removeEventListener("pointerup", onUp);
+      renderer.domElement.removeEventListener("pointerleave", onLeave);
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry.dispose();
@@ -335,6 +386,7 @@ function BambooFlute() {
   return (
     <section className="flute-exhibit">
       <div className="flute-stage" ref={mountRef} />
+      <p className="gesture-hint">拖动竹笛查看音孔 · 松手自动复位 · 点击音孔切换 0 / 1</p>
       <div className="flute-bits" aria-label="六位二进制声纹">
         {bits.map((bit, index) => (
           <button
@@ -409,8 +461,8 @@ export default function ResearchExhibit({ city, kind, onClose }: ExhibitProps) {
       </header>
       <main className="exhibit-body">
         {kind === "audio" && <BambooFlute />}
-        {kind === "dialect" && <DialectDial />}
-        {kind === "field" && <FanGallery />}
+        {kind === "dialect" && <ThreeDialectDial />}
+        {kind === "field" && <ThreeFanGallery />}
       </main>
     </div>
   );

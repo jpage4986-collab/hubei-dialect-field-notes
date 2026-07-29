@@ -129,6 +129,7 @@ export default function HubeiMap() {
     const edgeLines: THREE.LineSegments[] = [];
     let currentHover: string | null = null;
     let pointerDown = { x: 0, y: 0 };
+    let isMapDragging = false;
 
     const setFocus = (name: string | null) => {
       setActiveSection(null);
@@ -282,20 +283,36 @@ export default function HubeiMap() {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      targetMapTilt.set(-0.08 + pointer.y * 0.012, pointer.x * 0.018);
       mount.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
       mount.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
     };
-    const onPointerMove = (event: PointerEvent) => updatePointer(event);
+    const onPointerMove = (event: PointerEvent) => {
+      updatePointer(event);
+      if (!isMapDragging) return;
+      renderer.domElement.style.cursor = "grabbing";
+      const dx = event.clientX - pointerDown.x;
+      const dy = event.clientY - pointerDown.y;
+      targetMapTilt.set(
+        THREE.MathUtils.clamp(-0.08 + dy * 0.0028, -0.34, 0.2),
+        THREE.MathUtils.clamp(dx * 0.0032, -0.42, 0.42),
+      );
+    };
     const onPointerDown = (event: PointerEvent) => {
+      isMapDragging = true;
       pointerDown = { x: event.clientX, y: event.clientY };
+      renderer.domElement.setPointerCapture(event.pointerId);
       updatePointer(event);
     };
     const onPointerUp = (event: PointerEvent) => {
       const moved = Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y);
       if (moved < 8 && currentHover) setFocus(currentHover);
+      isMapDragging = false;
+      targetMapTilt.set(-0.08, 0);
+      renderer.domElement.style.cursor = currentHover ? "pointer" : "grab";
+      renderer.domElement.releasePointerCapture(event.pointerId);
     };
     const onPointerLeave = () => {
+      isMapDragging = false;
       pointer.set(3, 3);
       targetMapTilt.set(-0.08, 0);
       currentHover = null;

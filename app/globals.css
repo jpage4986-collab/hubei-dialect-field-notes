@@ -227,6 +227,19 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
 .exhibit-body { position: relative; z-index: 1; width: min(1180px, calc(100% - 64px)); margin: 0 auto; }
 
 .fan-exhibit { padding: 10px 0 70px; }
+.three-fan-stage {
+  height: clamp(390px, 58vh, 650px);
+  margin-top: -10px;
+  touch-action: none;
+}
+.three-fan-stage canvas, .three-dial-stage canvas { display: block; width: 100%; height: 100%; }
+.gesture-hint {
+  margin: -10px auto 18px;
+  color: #687a70;
+  font: 9px/1.4 monospace;
+  letter-spacing: .13em;
+  text-align: center;
+}
 .photo-fan {
   position: relative;
   width: min(760px, 88vw);
@@ -292,8 +305,58 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   align-items: center;
   padding-top: 30px;
   border-top: 1px solid rgba(227, 219, 190, .13);
+  animation: detail-swap .42s cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes detail-swap {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .photo-detail-image { aspect-ratio: 16 / 9; overflow: hidden; background: #10231b; }
+.generated-photo-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.generated-photo-preview::before {
+  content: "";
+  position: absolute;
+  inset: 52% -5% -12%;
+  background: #102219;
+  border-radius: 50% 50% 0 0;
+  transform: rotate(-4deg);
+  opacity: .88;
+}
+.generated-photo-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+.generated-photo-preview span { position: absolute; z-index: 3; top: 18px; left: 20px; color: #f0ddb0; font: 9px/1 monospace; letter-spacing: .18em; }
+.generated-photo-preview i, .generated-photo-preview b {
+  position: absolute;
+  z-index: 2;
+  bottom: 14%;
+  width: 34px;
+  height: 104px;
+  background: #08140f;
+}
+.generated-photo-preview i { left: 43%; }
+.generated-photo-preview b { left: 54%; height: 86px; }
+.generated-photo-preview i::before, .generated-photo-preview b::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -25px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #08140f;
+  transform: translateX(-50%);
+}
 .photo-detail p, .dial-detail p { margin: 0 0 12px; color: var(--gold); font: 500 9px/1.3 monospace; letter-spacing: .18em; }
 .photo-detail h3, .dial-detail h3 { margin: 0 0 15px; color: var(--paper); font: 500 clamp(30px, 4vw, 54px)/1.12 var(--serif); }
 .photo-detail span, .dial-detail span { color: #9ba99f; font: 14px/1.85 var(--serif); }
@@ -345,6 +408,27 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
 }
 .audio-note { width: min(760px, 88vw); margin: 18px auto 0; color: #65766c; font-size: 10px; letter-spacing: .05em; }
 
+.three-dialect-exhibit {
+  min-height: 650px;
+  padding: 18px 0 70px;
+  display: grid;
+  grid-template-columns: minmax(520px, 1.25fr) minmax(260px, .55fr);
+  gap: 48px;
+  align-items: center;
+}
+.three-dial-stage {
+  height: clamp(480px, 68vh, 720px);
+  touch-action: none;
+}
+.three-dialect-exhibit > .gesture-hint {
+  grid-column: 1;
+  margin-top: -55px;
+}
+.three-dialect-exhibit > .dial-detail {
+  grid-column: 2;
+  grid-row: 1;
+}
+
 .dialect-dial {
   min-height: 650px;
   padding: 56px 0 70px;
@@ -379,6 +463,7 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   font: 500 28px/1 var(--serif);
 }
 .dial-detail { max-width: 360px; }
+.three-dialect-exhibit .dial-detail { animation: detail-swap .4s cubic-bezier(.2, .8, .2, 1) both; }
 
 .author-dialog {
   width: min(440px, calc(100vw - 36px));
@@ -420,12 +505,17 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   .exhibit-header, .exhibit-body { width: calc(100% - 36px); }
   .exhibit-header { grid-template-columns: 1fr; gap: 22px; padding-top: 20px; }
   .photo-fan { height: 340px; transform: scale(.78); transform-origin: 50% 100%; margin-top: -10px; margin-bottom: -45px; }
+  .three-fan-stage { height: 390px; margin-inline: -18px; }
   .photo-detail { grid-template-columns: 1fr; gap: 22px; }
   .flute-stage { height: 300px; margin-inline: -18px; }
   .flute-bits { width: 100%; }
   .flute-actions { width: 100%; }
   .audio-note { width: 100%; }
   .dialect-dial { min-height: 620px; padding-top: 34px; grid-template-columns: 1fr; gap: 34px; }
+  .three-dialect-exhibit { min-height: 650px; padding-top: 0; grid-template-columns: 1fr; gap: 18px; }
+  .three-dial-stage { height: 430px; margin-inline: -18px; }
+  .three-dialect-exhibit > .gesture-hint { grid-column: 1; margin-top: -42px; }
+  .three-dialect-exhibit > .dial-detail { grid-column: 1; grid-row: auto; padding-bottom: 30px; }
   .dial-rings { width: min(520px, 88vw); }
   .dial-detail { max-width: none; padding-bottom: 30px; }
 }
