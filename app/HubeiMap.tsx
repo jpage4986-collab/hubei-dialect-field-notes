@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { geoMercator, geoPath } from "d3-geo";
+import { geoMercator } from "d3-geo";
 
 type Position = [number, number];
 type CityFeature = {
@@ -51,7 +51,7 @@ export default function HubeiMap() {
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x071512, 0.027);
 
-    const mapScale = 1.55;
+    const mapScale = 1;
     const mapOffsetX = 0;
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
     const homePosition = new THREE.Vector3(0, -4.2, 28.5);
@@ -157,11 +157,47 @@ export default function HubeiMap() {
       const data = (await response.json()) as CityCollection;
       if (disposed) return;
 
-      const projection = geoMercator().fitExtent(
-        [[0.4, 0.4], [17.6, 12.6]],
-        data as never,
+      // The source polygons use the opposite ring winding from d3-geo's
+      // spherical-area convention. fitExtent therefore sees the complement
+      // of Hubei (almost the whole globe) and shrinks the province to a dot.
+      // Fit the projection from the published longitude/latitude vertices
+      // instead, which is independent of polygon winding.
+      const rawProjection = geoMercator().scale(1).translate([0, 0]);
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      const measureCoordinates = (coordinates: unknown): void => {
+        if (!Array.isArray(coordinates)) return;
+        if (
+          coordinates.length >= 2 &&
+          typeof coordinates[0] === "number" &&
+          typeof coordinates[1] === "number"
+        ) {
+          const point = rawProjection(coordinates as Position);
+          if (!point) return;
+          minX = Math.min(minX, point[0]);
+          minY = Math.min(minY, point[1]);
+          maxX = Math.max(maxX, point[0]);
+          maxY = Math.max(maxY, point[1]);
+          return;
+        }
+        coordinates.forEach(measureCoordinates);
+      };
+      data.features.forEach((feature) => measureCoordinates(feature.geometry.coordinates));
+
+      const targetWidth = 16.8;
+      const targetHeight = 11.6;
+      const projectionScale = Math.min(
+        targetWidth / (maxX - minX),
+        targetHeight / (maxY - minY),
       );
-      const path = geoPath(projection);
+      const projection = geoMercator()
+        .scale(projectionScale)
+        .translate([
+          9 - ((minX + maxX) / 2) * projectionScale,
+          6.5 - ((minY + maxY) / 2) * projectionScale,
+        ]);
 
       data.features.forEach((feature, featureIndex) => {
         const name = feature.properties.name;
@@ -176,6 +212,7 @@ export default function HubeiMap() {
         cityMaterials.set(name, material);
 
         const group = new THREE.Group();
+        const cityBounds = new THREE.Box3();
         group.userData.cityName = name;
         cityGroups.set(name, group);
         mapGroup.add(group);
@@ -209,6 +246,8 @@ export default function HubeiMap() {
             bevelSize: 0.035,
             bevelSegments: 2,
           });
+          geometry.computeBoundingBox();
+          if (geometry.boundingBox) cityBounds.union(geometry.boundingBox);
           const mesh = new THREE.Mesh(geometry, material);
           mesh.castShadow = true;
           mesh.receiveShadow = true;
@@ -225,8 +264,8 @@ export default function HubeiMap() {
           edgeLines.push(outline);
         });
 
-        const center = path.centroid(feature as never);
-        cityCentroids.set(name, new THREE.Vector2(center[0] - 9, -(center[1] - 6.5)));
+        const center = cityBounds.getCenter(new THREE.Vector3());
+        cityCentroids.set(name, new THREE.Vector2(center.x, center.y));
       });
     };
 
@@ -265,6 +304,16 @@ export default function HubeiMap() {
       const height = mount.clientHeight;
       renderer.setSize(width, height);
       camera.aspect = width / Math.max(height, 1);
+      const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+      const targetFill = 0.78;
+      const provinceWidth = 16.9 * mapScale;
+      const provinceHeight = 10.9 * mapScale;
+      const fittedDistance = Math.max(
+        provinceHeight / (2 * Math.tan(halfFov) * targetFill),
+        provinceWidth / (2 * Math.tan(halfFov) * camera.aspect * targetFill),
+      );
+      homePosition.set(0, -fittedDistance * 0.12, fittedDistance);
+      if (!selectedRef.current) desiredPosition.copy(homePosition);
       camera.updateProjectionMatrix();
     };
     const observer = new ResizeObserver(resize);
