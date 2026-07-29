@@ -111,22 +111,20 @@ export default function HubeiMap() {
 
     const mapGroup = new THREE.Group();
     mapGroup.rotation.x = -0.08;
-    mapGroup.position.set(0, 0, 0);
-    mapGroup.scale.setScalar(mapScale);
+    mapGroup.position.set(0, 0, -0.32);
+    mapGroup.scale.setScalar(mapScale * 0.96);
     scene.add(mapGroup);
+    const targetMapTilt = new THREE.Vector2(-0.08, 0);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
     const cityMeshes: THREE.Mesh[] = [];
     const cityGroups = new Map<string, THREE.Group>();
-    const cityMaterials = new Map<string, THREE.MeshStandardMaterial>();
+    const cityMaterials = new Map<string, THREE.MeshPhysicalMaterial>();
+    const edgeMaterials = new Map<string, THREE.LineBasicMaterial>();
     const cityCentroids = new Map<string, THREE.Vector2>();
     const edgeLines: THREE.LineSegments[] = [];
-    const boundaryMaterial = new THREE.LineBasicMaterial({
-      color: 0xd8bf84,
-      transparent: true,
-      opacity: 0.56,
-    });
     let currentHover: string | null = null;
     let pointerDown = { x: 0, y: 0 };
 
@@ -197,15 +195,25 @@ export default function HubeiMap() {
 
       data.features.forEach((feature, featureIndex) => {
         const name = feature.properties.name;
-        const material = new THREE.MeshStandardMaterial({
-          color: featureIndex % 3 === 0 ? 0x5b9b80 : featureIndex % 3 === 1 ? 0x4c866f : 0x68a58b,
+        const material = new THREE.MeshPhysicalMaterial({
+          color: featureIndex % 3 === 0 ? 0x4e836d : featureIndex % 3 === 1 ? 0x467661 : 0x568b74,
           emissive: 0x07110e,
-          emissiveIntensity: 0.24,
-          roughness: 0.48,
-          metalness: 0.28,
+          emissiveIntensity: 0.14,
+          roughness: 0.34,
+          metalness: 0.18,
+          clearcoat: 0.32,
+          clearcoatRoughness: 0.58,
+          sheen: 0.18,
+          sheenColor: new THREE.Color(0x9bc4ad),
           side: THREE.DoubleSide,
         });
+        const outlineMaterial = new THREE.LineBasicMaterial({
+          color: 0xbfa66b,
+          transparent: true,
+          opacity: 0.42,
+        });
         cityMaterials.set(name, material);
+        edgeMaterials.set(name, outlineMaterial);
 
         const group = new THREE.Group();
         const cityBounds = new THREE.Box3();
@@ -251,7 +259,7 @@ export default function HubeiMap() {
 
           const outline = new THREE.LineSegments(
             new THREE.EdgesGeometry(geometry, 24),
-            boundaryMaterial,
+            outlineMaterial,
           );
           outline.position.z = 0.012;
           group.add(outline);
@@ -271,6 +279,7 @@ export default function HubeiMap() {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      targetMapTilt.set(-0.08 + pointer.y * 0.012, pointer.x * 0.018);
       mount.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
       mount.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
     };
@@ -285,6 +294,7 @@ export default function HubeiMap() {
     };
     const onPointerLeave = () => {
       pointer.set(3, 3);
+      targetMapTilt.set(-0.08, 0);
       currentHover = null;
       setHovered(null);
     };
@@ -330,16 +340,49 @@ export default function HubeiMap() {
       cityGroups.forEach((group, name) => {
         const isSelected = selectedRef.current === name;
         const isHovered = currentHover === name;
+        const hasSelection = Boolean(selectedRef.current);
         const targetZ = isSelected ? 1.12 : isHovered ? 0.58 : 0;
         group.position.z += (targetZ - group.position.z) * 0.12;
         const material = cityMaterials.get(name);
         if (material) {
-          const targetColor = new THREE.Color(isSelected ? 0xe1bc70 : isHovered ? 0x8fd0ae : 0x568d76);
+          const targetColor = new THREE.Color(
+            isSelected ? 0xb9c99e : isHovered ? 0x78ad90 : hasSelection ? 0x294b3e : 0x4b7c67,
+          );
           material.color.lerp(targetColor, 0.1);
-          material.emissiveIntensity += ((isSelected ? 0.8 : isHovered ? 0.5 : 0.2) - material.emissiveIntensity) * 0.1;
+          material.emissiveIntensity +=
+            ((isSelected ? 0.42 : isHovered ? 0.26 : hasSelection ? 0.06 : 0.14) -
+              material.emissiveIntensity) *
+            0.1;
+          material.roughness +=
+            ((isSelected || isHovered ? 0.24 : 0.34) - material.roughness) * 0.1;
+        }
+        const outlineMaterial = edgeMaterials.get(name);
+        if (outlineMaterial) {
+          outlineMaterial.color.lerp(
+            new THREE.Color(
+              isSelected ? 0xf0d28a : isHovered ? 0xd9c17c : hasSelection ? 0x6f7455 : 0xb39d68,
+            ),
+            0.1,
+          );
+          outlineMaterial.opacity +=
+            ((isSelected ? 0.82 : isHovered ? 0.68 : hasSelection ? 0.18 : 0.42) -
+              outlineMaterial.opacity) *
+            0.1;
         }
       });
 
+      if (!reduceMotion) {
+        mapGroup.rotation.x += (targetMapTilt.x - mapGroup.rotation.x) * 0.035;
+        mapGroup.rotation.y += (targetMapTilt.y - mapGroup.rotation.y) * 0.035;
+        const entranceScale = mapScale;
+        mapGroup.scale.x += (entranceScale - mapGroup.scale.x) * 0.035;
+        mapGroup.scale.y += (entranceScale - mapGroup.scale.y) * 0.035;
+        mapGroup.scale.z += (entranceScale - mapGroup.scale.z) * 0.035;
+        mapGroup.position.z += (0 - mapGroup.position.z) * 0.035;
+      } else {
+        mapGroup.scale.setScalar(mapScale);
+        mapGroup.position.z = 0;
+      }
       camera.position.lerp(desiredPosition, 0.055);
       cameraTarget.lerp(desiredTarget, 0.06);
       camera.lookAt(cameraTarget);
@@ -359,7 +402,7 @@ export default function HubeiMap() {
       cityMeshes.forEach((mesh) => mesh.geometry.dispose());
       edgeLines.forEach((line) => line.geometry.dispose());
       cityMaterials.forEach((material) => material.dispose());
-      boundaryMaterial.dispose();
+      edgeMaterials.forEach((material) => material.dispose());
       renderer.dispose();
       renderer.domElement.remove();
     };

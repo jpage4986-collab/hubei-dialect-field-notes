@@ -37,6 +37,22 @@ button { font: inherit; }
   background-size: 42px 42px;
   mask-image: radial-gradient(circle at center, #000, transparent 78%);
 }
+.map-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      320px circle at var(--pointer-x) var(--pointer-y),
+      rgba(127, 184, 151, .075),
+      rgba(127, 184, 151, .025) 38%,
+      transparent 72%
+    ),
+    radial-gradient(circle at 50% 50%, transparent 48%, rgba(1, 8, 6, .2) 100%);
+  transition: opacity .3s ease;
+}
+.map-layer.has-selection::after { opacity: .42; }
 .map-layer canvas { display: block; width: 100%; height: 100%; }
 
 .map-prompt {
