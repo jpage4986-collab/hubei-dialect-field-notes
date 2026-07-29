@@ -51,9 +51,12 @@ export default function HubeiMap() {
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x071512, 0.027);
 
+    const mapScale = 1.35;
+    const mapOffsetX = 3.6;
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    const homePosition = new THREE.Vector3(0, -18, 20);
-    const cameraTarget = new THREE.Vector3(0, 0, 0);
+    const homePosition = new THREE.Vector3(mapOffsetX, -19.5, 21);
+    const homeTarget = new THREE.Vector3(mapOffsetX, 0, 0.3);
+    const cameraTarget = homeTarget.clone();
     const desiredPosition = homePosition.clone();
     const desiredTarget = cameraTarget.clone();
     camera.position.copy(homePosition);
@@ -69,9 +72,9 @@ export default function HubeiMap() {
     renderer.domElement.setAttribute("role", "img");
     mount.appendChild(renderer.domElement);
 
-    const ambient = new THREE.HemisphereLight(0xbce6d5, 0x04110e, 2.6);
+    const ambient = new THREE.HemisphereLight(0xc8f2df, 0x04110e, 3.4);
     scene.add(ambient);
-    const keyLight = new THREE.DirectionalLight(0xffedc2, 4.6);
+    const keyLight = new THREE.DirectionalLight(0xffedc2, 6.2);
     keyLight.position.set(-7, -8, 18);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(2048, 2048);
@@ -112,6 +115,8 @@ export default function HubeiMap() {
 
     const mapGroup = new THREE.Group();
     mapGroup.rotation.x = -0.08;
+    mapGroup.position.x = mapOffsetX;
+    mapGroup.scale.setScalar(mapScale);
     scene.add(mapGroup);
 
     const raycaster = new THREE.Raycaster();
@@ -120,6 +125,12 @@ export default function HubeiMap() {
     const cityGroups = new Map<string, THREE.Group>();
     const cityMaterials = new Map<string, THREE.MeshStandardMaterial>();
     const cityCentroids = new Map<string, THREE.Vector2>();
+    const edgeLines: THREE.LineSegments[] = [];
+    const boundaryMaterial = new THREE.LineBasicMaterial({
+      color: 0xd8bf84,
+      transparent: true,
+      opacity: 0.56,
+    });
     let currentHover: string | null = null;
     let pointerDown = { x: 0, y: 0 };
 
@@ -128,13 +139,15 @@ export default function HubeiMap() {
       selectedRef.current = name;
       if (!name) {
         desiredPosition.copy(homePosition);
-        desiredTarget.set(0, 0, 0);
+        desiredTarget.copy(homeTarget);
         return;
       }
       const c = cityCentroids.get(name);
       if (!c) return;
-      desiredTarget.set(c.x, c.y, 0.8);
-      desiredPosition.set(c.x * 0.38, c.y - 9.2, 11.2);
+      const worldX = c.x * mapScale + mapOffsetX;
+      const worldY = c.y * mapScale;
+      desiredTarget.set(worldX, worldY, 1.1);
+      desiredPosition.set(worldX, worldY - 10.5, 12.4);
     };
     focusRef.current = setFocus;
 
@@ -153,11 +166,12 @@ export default function HubeiMap() {
       data.features.forEach((feature, featureIndex) => {
         const name = feature.properties.name;
         const material = new THREE.MeshStandardMaterial({
-          color: featureIndex % 3 === 0 ? 0x397b65 : featureIndex % 3 === 1 ? 0x2f6957 : 0x43846d,
+          color: featureIndex % 3 === 0 ? 0x5b9b80 : featureIndex % 3 === 1 ? 0x4c866f : 0x68a58b,
           emissive: 0x07110e,
           emissiveIntensity: 0.24,
-          roughness: 0.54,
-          metalness: 0.34,
+          roughness: 0.48,
+          metalness: 0.28,
+          side: THREE.DoubleSide,
         });
         cityMaterials.set(name, material);
 
@@ -201,6 +215,14 @@ export default function HubeiMap() {
           mesh.userData.cityName = name;
           group.add(mesh);
           cityMeshes.push(mesh);
+
+          const outline = new THREE.LineSegments(
+            new THREE.EdgesGeometry(geometry, 24),
+            boundaryMaterial,
+          );
+          outline.position.z = 0.012;
+          group.add(outline);
+          edgeLines.push(outline);
         });
 
         const center = path.centroid(feature as never);
@@ -269,7 +291,7 @@ export default function HubeiMap() {
         group.position.z += (targetZ - group.position.z) * 0.12;
         const material = cityMaterials.get(name);
         if (material) {
-          const targetColor = new THREE.Color(isSelected ? 0xd5ae62 : isHovered ? 0x75b89b : 0x39705e);
+          const targetColor = new THREE.Color(isSelected ? 0xe1bc70 : isHovered ? 0x8fd0ae : 0x568d76);
           material.color.lerp(targetColor, 0.1);
           material.emissiveIntensity += ((isSelected ? 0.8 : isHovered ? 0.5 : 0.2) - material.emissiveIntensity) * 0.1;
         }
@@ -292,7 +314,9 @@ export default function HubeiMap() {
       renderer.domElement.removeEventListener("pointerup", onPointerUp);
       renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
       cityMeshes.forEach((mesh) => mesh.geometry.dispose());
+      edgeLines.forEach((line) => line.geometry.dispose());
       cityMaterials.forEach((material) => material.dispose());
+      boundaryMaterial.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
