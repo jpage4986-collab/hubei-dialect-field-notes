@@ -52,7 +52,7 @@ export default function HubeiMap() {
     scene.fog = new THREE.FogExp2(0x071512, 0.027);
 
     const mapScale = 1.35;
-    const mapOffsetX = 3.6;
+    const mapOffsetX = 0;
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
     const homePosition = new THREE.Vector3(mapOffsetX, -19.5, 21);
     const homeTarget = new THREE.Vector3(mapOffsetX, 0, 0.3);
@@ -146,8 +146,8 @@ export default function HubeiMap() {
       if (!c) return;
       const worldX = c.x * mapScale + mapOffsetX;
       const worldY = c.y * mapScale;
-      desiredTarget.set(worldX, worldY, 1.1);
-      desiredPosition.set(worldX, worldY - 10.5, 12.4);
+      desiredTarget.set(worldX - 3.2, worldY, 1.1);
+      desiredPosition.set(worldX - 3.2, worldY - 10.5, 12.4);
     };
     focusRef.current = setFocus;
 
@@ -325,7 +325,11 @@ export default function HubeiMap() {
   const story = selected ? CITY_STORIES[selected] ?? fallbackStory(selected) : null;
 
   return (
-    <div className="map-layer" ref={mountRef}>
+    <div className={`map-layer ${selected ? "has-selection" : ""}`} ref={mountRef}>
+      <div className={`map-prompt ${selected ? "is-hidden" : ""}`}>
+        <span>乡音楚韵</span>
+        <small>移动鼠标，选择一座城市</small>
+      </div>
       <div className={`city-tooltip ${hovered ? "is-visible" : ""}`} aria-live="polite">
         <span>{hovered}</span>
         {hovered && !hovered.includes("失败") && <small>点击进入</small>}
@@ -333,27 +337,42 @@ export default function HubeiMap() {
       <aside className={`city-story ${selected ? "is-visible" : ""}`} aria-hidden={!selected}>
         {story && (
           <>
-            <button className="story-close" type="button" onClick={() => focusRef.current(null)} aria-label="返回湖北全图">
-              ×
+            <button className="story-close" type="button" onClick={() => focusRef.current(null)}>
+              ← 返回地图
             </button>
-            <p className="story-kicker">SELECTED CITY · {selected}</p>
+            <p className="story-kicker">DIALECT FIELD NOTES · {selected}</p>
             <h2>{story.title}</h2>
             <p>{story.line}</p>
             <div className="story-meta">
               <span>研究切面</span>
               <strong>{story.focus}</strong>
             </div>
-            <a href="#archive">查看实践成果 <span>↓</span></a>
+            <div className="result-list">
+              <article>
+                <span>01</span>
+                <div>
+                  <h3>声音档案</h3>
+                  <p>自然对话、方言词表与地方叙事录音</p>
+                </div>
+              </article>
+              <article>
+                <span>02</span>
+                <div>
+                  <h3>方言观察</h3>
+                  <p>语音特点、地方词汇与代际使用差异</p>
+                </div>
+              </article>
+              <article>
+                <span>03</span>
+                <div>
+                  <h3>田野手记</h3>
+                  <p>城市生活、乡土文化与口述记忆</p>
+                </div>
+              </article>
+            </div>
           </>
         )}
       </aside>
-      <button
-        className={`reset-map ${selected ? "is-visible" : ""}`}
-        type="button"
-        onClick={() => focusRef.current(null)}
-      >
-        ← 返回全省
-      </button>
     </div>
   );
 }
