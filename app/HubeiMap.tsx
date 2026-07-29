@@ -51,11 +51,11 @@ export default function HubeiMap() {
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x071512, 0.027);
 
-    const mapScale = 1.35;
+    const mapScale = 1.55;
     const mapOffsetX = 0;
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    const homePosition = new THREE.Vector3(mapOffsetX, -19.5, 21);
-    const homeTarget = new THREE.Vector3(mapOffsetX, 0, 0.3);
+    const homePosition = new THREE.Vector3(0, -4.2, 28.5);
+    const homeTarget = new THREE.Vector3(0, 0, 0.3);
     const cameraTarget = homeTarget.clone();
     const desiredPosition = homePosition.clone();
     const desiredTarget = cameraTarget.clone();
@@ -115,7 +115,7 @@ export default function HubeiMap() {
 
     const mapGroup = new THREE.Group();
     mapGroup.rotation.x = -0.08;
-    mapGroup.position.x = mapOffsetX;
+    mapGroup.position.set(0, 0, 0);
     mapGroup.scale.setScalar(mapScale);
     scene.add(mapGroup);
 
