@@ -66,8 +66,7 @@ export default function HubeiMap() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = false;
     renderer.domElement.setAttribute("aria-label", "湖北省地级市三维互动地图");
     renderer.domElement.setAttribute("role", "img");
     mount.appendChild(renderer.domElement);
@@ -76,8 +75,6 @@ export default function HubeiMap() {
     scene.add(ambient);
     const keyLight = new THREE.DirectionalLight(0xffedc2, 6.2);
     keyLight.position.set(-7, -8, 18);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(2048, 2048);
     scene.add(keyLight);
     const rimLight = new THREE.PointLight(0x2fae84, 30, 36);
     rimLight.position.set(9, 8, 8);
@@ -94,7 +91,6 @@ export default function HubeiMap() {
       }),
     );
     ground.position.z = -0.32;
-    ground.receiveShadow = true;
     scene.add(ground);
 
     const rings = new THREE.Group();
@@ -249,8 +245,6 @@ export default function HubeiMap() {
           geometry.computeBoundingBox();
           if (geometry.boundingBox) cityBounds.union(geometry.boundingBox);
           const mesh = new THREE.Mesh(geometry, material);
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
           mesh.userData.cityName = name;
           group.add(mesh);
           cityMeshes.push(mesh);
