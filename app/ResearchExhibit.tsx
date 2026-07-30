@@ -219,7 +219,9 @@ function BambooFlute() {
 
     const flute = new THREE.Group();
     flute.rotation.z = Math.PI / 2;
+    flute.rotation.x = -0.24;
     flute.rotation.y = -0.08;
+    flute.scale.set(0.78, 1.14, 0.78);
     scene.add(flute);
     const bambooCanvas = document.createElement("canvas");
     bambooCanvas.width = 1024;
@@ -326,33 +328,6 @@ function BambooFlute() {
     membraneRing.position.copy(membrane.position);
     flute.add(membraneRing);
 
-    const inscriptionCanvas = document.createElement("canvas");
-    inscriptionCanvas.width = 768;
-    inscriptionCanvas.height = 128;
-    const inscriptionContext = inscriptionCanvas.getContext("2d");
-    if (inscriptionContext) {
-      inscriptionContext.clearRect(0, 0, 768, 128);
-      inscriptionContext.fillStyle = "#342615";
-      inscriptionContext.font = '600 62px "Noto Serif SC", "Songti SC", serif';
-      inscriptionContext.textAlign = "center";
-      inscriptionContext.textBaseline = "middle";
-      inscriptionContext.fillText("乡音楚韵 · 湖北方言", 384, 66);
-    }
-    const inscriptionTexture = new THREE.CanvasTexture(inscriptionCanvas);
-    inscriptionTexture.colorSpace = THREE.SRGBColorSpace;
-    const inscription = new THREE.Mesh(
-      new THREE.PlaneGeometry(3.4, 0.48),
-      new THREE.MeshBasicMaterial({
-        map: inscriptionTexture,
-        transparent: true,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      }),
-    );
-    inscription.rotation.z = Math.PI / 2;
-    inscription.position.set(0, 0.15, 0.497);
-    flute.add(inscription);
-
     const tasselMaterial = new THREE.MeshStandardMaterial({
       color: 0x8c211d,
       roughness: 0.74,
@@ -380,7 +355,7 @@ function BambooFlute() {
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
-    const baseFluteRotation = new THREE.Vector2(0, -0.08);
+    const baseFluteRotation = new THREE.Vector2(-0.24, -0.08);
     const targetFluteRotation = baseFluteRotation.clone();
     let isDragging = false;
     let dragStartX = 0;
@@ -424,7 +399,7 @@ function BambooFlute() {
       flute.add(hole);
       holes.push(hole);
 
-      const particleCount = 34;
+      const particleCount = 52;
       const positions = new Float32Array(particleCount * 3);
       const velocities = new Float32Array(particleCount * 3);
       const phases = new Float32Array(particleCount);
@@ -480,7 +455,7 @@ function BambooFlute() {
       const dy = event.clientY - dragStartY;
       dragDistance = Math.max(dragDistance, Math.hypot(dx, dy));
       targetFluteRotation.set(
-        THREE.MathUtils.clamp(dy * 0.004, -0.38, 0.38),
+        THREE.MathUtils.clamp(baseFluteRotation.x + dy * 0.004, -0.58, 0.16),
         THREE.MathUtils.clamp(baseFluteRotation.y + dx * 0.0045, -0.62, 0.46),
       );
     };
@@ -541,11 +516,11 @@ function BambooFlute() {
 
         const field = particleFields[index];
         const particleMaterial = field.points.material as THREE.PointsMaterial;
-        const targetOpacity = active && lit ? 0.98 : lit ? 0.5 : 0;
+        const targetOpacity = active && lit ? 1 : lit ? 0.82 : 0;
         particleMaterial.opacity += (targetOpacity - particleMaterial.opacity) * 0.11;
-        particleMaterial.size += ((active && lit ? 0.13 : 0.075) - particleMaterial.size) * 0.12;
-        const speed = active && lit ? 2.9 : lit ? 1 : 0.22;
-        const travelLimit = active && lit ? 1.72 : 0.92;
+        particleMaterial.size += ((active && lit ? 0.18 : 0.105) - particleMaterial.size) * 0.12;
+        const speed = active && lit ? 3.4 : lit ? 1.25 : 0.22;
+        const travelLimit = active && lit ? 1.9 : 1.08;
         for (let particle = 0; particle < field.phases.length; particle += 1) {
           const offset = particle * 3;
           field.positions[offset] +=
