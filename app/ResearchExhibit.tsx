@@ -148,9 +148,25 @@ function FanGallery() {
   );
 }
 
+const VOICE_SAMPLES = [
+  {
+    bits: [1, 0, 1, 1, 0, 1],
+    title: "河岸边的一段闲谈。",
+    description:
+      "讲述从日常称谓进入旧城生活，停顿、笑声和远处的环境声也被完整保留。音孔编码对应这段采样在声音档案中的位置。",
+  },
+  {
+    bits: [0, 1, 1, 0, 1, 0],
+    title: "集市里的一声回应。",
+    description:
+      "叫卖、议价和熟人交谈交织在一起，地方词汇在具体的生活场景中自然出现，也留下了当时的空间与距离。",
+  },
+];
+
 function BambooFlute({ city }: { city: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const [bits, setBits] = useState([1, 0, 1, 1, 0, 1]);
+  const [sampleIndex, setSampleIndex] = useState(0);
+  const [bits, setBits] = useState([...VOICE_SAMPLES[0].bits]);
   const bitsRef = useRef(bits);
   const activeRef = useRef(-1);
   const [activeHole, setActiveHole] = useState(-1);
@@ -167,6 +183,19 @@ function BambooFlute({ city }: { city: string }) {
 
   const toggleHole = (index: number) => {
     setBits((current) => current.map((bit, bitIndex) => (bitIndex === index ? 1 - bit : bit)));
+  };
+
+  const switchSample = () => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    const nextIndex = (sampleIndex + 1) % VOICE_SAMPLES.length;
+    const nextBits = [...VOICE_SAMPLES[nextIndex].bits];
+    bitsRef.current = nextBits;
+    setSampleIndex(nextIndex);
+    setBits(nextBits);
+    setActiveHole(-1);
+    setHasPlayed(false);
+    setIntroVisible(false);
   };
 
   const playPattern = () => {
@@ -222,9 +251,10 @@ function BambooFlute({ city }: { city: string }) {
     scene.add(key);
 
     const flute = new THREE.Group();
-    flute.rotation.z = Math.PI / 2;
+    flute.rotation.z = -Math.PI / 2;
     flute.rotation.x = 0;
-    flute.rotation.y = 0.42;
+    flute.rotation.y = -0.42;
+    flute.scale.setScalar(0.84);
     scene.add(flute);
     const bambooCanvas = document.createElement("canvas");
     bambooCanvas.width = 1024;
@@ -358,7 +388,7 @@ function BambooFlute({ city }: { city: string }) {
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
-    const baseFluteRotation = new THREE.Vector2(0, 0.42);
+    const baseFluteRotation = new THREE.Vector2(0, -0.42);
     const targetFluteRotation = baseFluteRotation.clone();
     let isDragging = false;
     let dragStartX = 0;
@@ -459,7 +489,7 @@ function BambooFlute({ city }: { city: string }) {
       dragDistance = Math.max(dragDistance, Math.hypot(dx, dy));
       targetFluteRotation.set(
         THREE.MathUtils.clamp(baseFluteRotation.x + dy * 0.004, -0.42, 0.42),
-        THREE.MathUtils.clamp(baseFluteRotation.y + dx * 0.0045, -0.08, 0.78),
+        THREE.MathUtils.clamp(baseFluteRotation.y + dx * 0.0045, -0.78, 0.08),
       );
     };
     const onUp = (event: PointerEvent) => {
@@ -572,6 +602,7 @@ function BambooFlute({ city }: { city: string }) {
     };
   }, []);
 
+  const sample = VOICE_SAMPLES[sampleIndex];
   return (
     <section
       className={`flute-exhibit ${introVisible ? "is-intro-visible" : ""}`}
@@ -583,21 +614,39 @@ function BambooFlute({ city }: { city: string }) {
     >
       <div className="flute-stage" ref={mountRef} />
       <article className="voice-intro" aria-hidden={!introVisible} aria-live="polite">
-        <p>VOICE ARCHIVE · {city}</p>
-        <h3>乡音，留在一次自然的讲述里。</h3>
-        <span>
-          我们从日常称谓、地方词汇和生活记忆进入访谈，保留讲述中的停顿、语气与环境声。
-          每一组音孔编码，最终都将对应一段真实的湖北方言录音。
-        </span>
+        <p>VOICE ARCHIVE · {city} · 0{sampleIndex + 1}</p>
+        <h3>{sample.title}</h3>
+        <span>{sample.description}</span>
       </article>
-      <button
-        className={`flute-play ${activeHole >= 0 ? "is-playing" : ""}`}
-        type="button"
-        onClick={playPattern}
-        aria-label="播放所选音孔"
-      >
-        播放
-      </button>
+      <div className="flute-controls">
+        <div className="flute-hole-selectors" aria-label="选择六个音孔">
+          {bits.map((bit, index) => (
+            <button
+              className={`${bit ? "is-selected" : ""} ${activeHole === index ? "is-playing" : ""}`}
+              type="button"
+              key={index}
+              aria-label={`第${index + 1}音孔，当前为${bit}`}
+              aria-pressed={Boolean(bit)}
+              onClick={() => toggleHole(index)}
+            >
+              {bit}
+            </button>
+          ))}
+        </div>
+        <div className="flute-transport">
+          <button
+            className={`flute-play ${activeHole >= 0 ? "is-playing" : ""}`}
+            type="button"
+            onClick={playPattern}
+            aria-label="播放所选音孔"
+          >
+            <span aria-hidden="true">▶</span>
+          </button>
+          <button className="flute-switch" type="button" onClick={switchSample} aria-label="切换采样">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
