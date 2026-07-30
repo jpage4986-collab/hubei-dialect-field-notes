@@ -1,5 +1,5 @@
 1:"$Sreact.fragment"
 2:I[7121,[],""]
 3:I[4581,[],""]
-:HL["/hubei-dialect-field-notes/_next/static/css/630e9d5bd8feb302.css","style"]
-0:{"rsc":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/hubei-dialect-field-notes/_next/static/css/630e9d5bd8feb302.css","precedence":"next"}]],["$","html",null,{"lang":"zh-CN","children":["$","body",null,{"children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"qgoZSYjCGX2HdOxpskkPr"}
+:HL["/hubei-dialect-field-notes/_next/static/css/4fa3ed61da5e20f3.css","style"]
+0:{"rsc":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/hubei-dialect-field-notes/_next/static/css/4fa3ed61da5e20f3.css","precedence":"next"}]],["$","html",null,{"lang":"zh-CN","children":["$","body",null,{"children":["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"8xGwP547C79M6jypMPtim"}
