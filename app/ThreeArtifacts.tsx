@@ -347,26 +347,82 @@ export function ThreeFanGallery() {
 }
 
 const DIALECT_ITEMS = [
-  { label: "声母", value: "送气与不送气", note: "比较不同年龄讲述者在自然语流中的起音差异。" },
-  { label: "韵母", value: "开口度与鼻尾", note: "把同一词项的韵母变化放回具体地点与语境。" },
-  { label: "声调", value: "调值与连读", note: "观察单字调进入句子后产生的节奏和调型变化。" },
+  {
+    label: "01 · 声母",
+    value: "送气与不送气",
+    note: "比较不同年龄讲述者在自然语流中的起音差异，观察塞音、塞擦音在地方口音中的分合。",
+  },
+  {
+    label: "02 · 韵母",
+    value: "开口度与鼻尾",
+    note: "把同一词项的韵母变化放回具体地点与语境，记录前后鼻音和入声韵尾的地域差异。",
+  },
+  {
+    label: "03 · 声调",
+    value: "调值与连读",
+    note: "观察单字调进入句子后产生的节奏和调型变化，同时保留自然停顿与语气。",
+  },
+  {
+    label: "04 · 词汇",
+    value: "地方词项",
+    note: "从亲属称谓、饮食、农事与街巷生活切入，辨认仍在使用和正在消退的地方词。",
+  },
+  {
+    label: "05 · 语流",
+    value: "连读与节奏",
+    note: "对照词表读音与自由交谈，记录弱化、同化、吞音以及句末语气的真实表现。",
+  },
+  {
+    label: "06 · 代际",
+    value: "口音的迁移",
+    note: "比较老、中、青三代讲述者，寻找普通话、人口流动与媒介环境留下的语言痕迹。",
+  },
+  {
+    label: "07 · 场景",
+    value: "谁在何处说",
+    note: "同一个人面对家人、邻里和访谈者时会切换表达方式，语境也是方言材料的一部分。",
+  },
+  {
+    label: "08 · 记忆",
+    value: "声音中的地方",
+    note: "把发音、故事与具体地点相互索引，让方言不仅是音系样本，也是可被讲述的地方记忆。",
+  },
 ];
 
-function makeLabelTexture(label: string) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 128;
-  const context = canvas.getContext("2d");
-  if (context) {
-    context.clearRect(0, 0, 256, 128);
-    context.fillStyle = "#ead395";
-    context.font = "500 48px serif";
-    context.textAlign = "center";
-    context.fillText(label, 128, 76);
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+type BellPiece = {
+  pivot: THREE.Group;
+  hit: THREE.Mesh;
+  material: THREE.MeshPhysicalMaterial;
+  index: number;
+  swing: number;
+  velocity: number;
+};
+
+function playBellTone(index: number) {
+  const AudioContextClass = window.AudioContext
+    ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextClass) return;
+  const context = new AudioContextClass();
+  const now = context.currentTime;
+  const output = context.createGain();
+  output.gain.setValueAtTime(0.0001, now);
+  output.gain.exponentialRampToValueAtTime(0.18, now + 0.015);
+  output.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+  output.connect(context.destination);
+  const base = [196, 220, 247, 262, 294, 330, 349, 392][index];
+  [1, 1.504, 2.03].forEach((ratio, partial) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = partial === 0 ? "sine" : "triangle";
+    oscillator.frequency.value = base * ratio;
+    oscillator.detune.value = partial * 4;
+    gain.gain.value = [0.75, 0.22, 0.09][partial];
+    oscillator.connect(gain);
+    gain.connect(output);
+    oscillator.start(now);
+    oscillator.stop(now + 2.45);
+  });
+  window.setTimeout(() => void context.close(), 2700);
 }
 
 export function ThreeDialectDial() {
@@ -381,66 +437,161 @@ export function ThreeDialectDial() {
     const mount = mountRef.current;
     if (!mount) return;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
-    camera.position.set(0, 0.5, 15.4);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(31, 1, 0.1, 80);
+    camera.position.set(0, 0.45, 18.5);
+    camera.lookAt(0, 0.15, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.domElement.setAttribute("aria-label", "可旋转的三维方言观察字盘");
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.domElement.setAttribute("aria-label", "可旋转并点击敲击的三维曾侯乙编钟");
     renderer.domElement.setAttribute("role", "img");
     mount.appendChild(renderer.domElement);
-    scene.add(new THREE.HemisphereLight(0xefe5c9, 0x07110d, 2.1));
-    const key = new THREE.DirectionalLight(0xffd477, 5.2);
-    key.position.set(-4, 5, 8);
+    scene.add(new THREE.HemisphereLight(0xd9c998, 0x06100c, 1.7));
+    const key = new THREE.DirectionalLight(0xffd98a, 5.6);
+    key.position.set(-5, 7, 9);
     scene.add(key);
-    const dial = new THREE.Group();
-    dial.rotation.x = -0.12;
-    scene.add(dial);
-    const baseRotation = new THREE.Vector2(-0.12, 0);
+    const rim = new THREE.PointLight(0x6aa883, 8.5, 25);
+    rim.position.set(6, 1, -4);
+    scene.add(rim);
+
+    const rack = new THREE.Group();
+    rack.rotation.x = -0.08;
+    scene.add(rack);
+    const baseRotation = new THREE.Vector2(-0.08, -0.04);
     const targetRotation = baseRotation.clone();
-    const rings: THREE.Mesh[] = [];
-    const ringGroups: THREE.Group[] = [];
-    const textures: THREE.Texture[] = [];
-    [4.2, 3.2, 2.2].forEach((radius, index) => {
-      const group = new THREE.Group();
-      dial.add(group);
-      ringGroups.push(group);
-      const material = new THREE.MeshPhysicalMaterial({
-        color: index === 0 ? 0x486f5d : index === 1 ? 0x6d7252 : 0x8a7447,
-        emissive: 0xd5a84d,
-        emissiveIntensity: 0,
-        roughness: 0.3,
-        metalness: 0.38,
-        clearcoat: 0.26,
-      });
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.1, 20, 160), material);
-      ring.userData.index = index;
-      group.add(ring);
-      rings.push(ring);
-      for (let tick = 0; tick < 16; tick += 1) {
-        const angle = (tick / 16) * Math.PI * 2;
-        const mark = new THREE.Mesh(
-          new THREE.BoxGeometry(0.055, 0.28, 0.08),
-          new THREE.MeshStandardMaterial({ color: 0xb99c5a, roughness: 0.42 }),
-        );
-        mark.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
-        mark.rotation.z = angle;
-        group.add(mark);
-      }
-      const texture = makeLabelTexture(DIALECT_ITEMS[index].label);
-      textures.push(texture);
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
-      sprite.scale.set(1.35, 0.68, 1);
-      sprite.position.set(0, radius + 0.45, 0.08);
-      group.add(sprite);
+    rack.rotation.y = baseRotation.y;
+
+    const wood = new THREE.MeshPhysicalMaterial({
+      color: 0x281b12,
+      roughness: 0.64,
+      metalness: 0.08,
+      clearcoat: 0.12,
     });
-    const center = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.72, 0.72, 0.25, 64),
-      new THREE.MeshPhysicalMaterial({ color: 0xd0a84f, roughness: 0.25, metalness: 0.65 }),
-    );
-    center.rotation.x = Math.PI / 2;
-    dial.add(center);
+    const bronzeDark = new THREE.MeshStandardMaterial({
+      color: 0x5b4a2b,
+      roughness: 0.5,
+      metalness: 0.72,
+    });
+    const beamGeometry = new THREE.BoxGeometry(1, 1, 1, 4, 2, 2);
+    const addBeam = (position: THREE.Vector3, scale: THREE.Vector3, rotationZ = 0) => {
+      const beam = new THREE.Mesh(beamGeometry, wood);
+      beam.position.copy(position);
+      beam.scale.copy(scale);
+      beam.rotation.z = rotationZ;
+      rack.add(beam);
+      return beam;
+    };
+    addBeam(new THREE.Vector3(-5.55, 0.15, 0), new THREE.Vector3(0.35, 10.6, 0.46), -0.025);
+    addBeam(new THREE.Vector3(5.55, 0.15, 0), new THREE.Vector3(0.35, 10.6, 0.46), 0.025);
+    addBeam(new THREE.Vector3(0, 4.95, 0), new THREE.Vector3(11.65, 0.34, 0.48));
+    addBeam(new THREE.Vector3(0, 2.25, 0), new THREE.Vector3(10.9, 0.23, 0.38));
+    addBeam(new THREE.Vector3(0, -0.62, 0), new THREE.Vector3(10.55, 0.24, 0.38));
+    addBeam(new THREE.Vector3(0, -3.45, 0), new THREE.Vector3(10.25, 0.26, 0.4));
+    addBeam(new THREE.Vector3(-5.05, -5.08, 0), new THREE.Vector3(2.5, 0.28, 0.7), -0.08);
+    addBeam(new THREE.Vector3(5.05, -5.08, 0), new THREE.Vector3(2.5, 0.28, 0.7), 0.08);
+    [-5.55, 5.55].forEach((x) => {
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.62, 0.52, 8), bronzeDark);
+      cap.position.set(x, 5.45, 0);
+      rack.add(cap);
+    });
+
+    const bellProfile = [
+      new THREE.Vector2(0.92, -1.55),
+      new THREE.Vector2(0.83, -1.25),
+      new THREE.Vector2(0.72, -0.4),
+      new THREE.Vector2(0.6, 0.62),
+      new THREE.Vector2(0.48, 1.14),
+      new THREE.Vector2(0.34, 1.33),
+    ];
+    const bellGeometry = new THREE.LatheGeometry(bellProfile, 48);
+    bellGeometry.scale(0.82, 1, 1);
+    bellGeometry.computeVertexNormals();
+    const studGeometry = new THREE.SphereGeometry(0.09, 12, 8);
+    const ridgeGeometry = new THREE.BoxGeometry(1.22, 0.055, 0.045);
+    const pieces: BellPiece[] = [];
+    const hitMeshes: THREE.Mesh[] = [];
+    const layouts = [
+      { y: 3.45, xs: [-3.65, -1.25, 1.25, 3.65], scale: 0.73 },
+      { y: 0.65, xs: [-3.05, -1.02, 1.02, 3.05], scale: 0.9 },
+    ];
+    let bellIndex = 0;
+    layouts.forEach((row) => {
+      row.xs.forEach((x) => {
+        const index = bellIndex;
+        bellIndex += 1;
+        const scale = row.scale * (1 + Math.abs(x) * 0.025);
+        const pivot = new THREE.Group();
+        pivot.position.set(x, row.y, 0.05);
+        rack.add(pivot);
+        const hanger = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.72, 16), bronzeDark);
+        hanger.position.y = -0.33;
+        pivot.add(hanger);
+        const bellGroup = new THREE.Group();
+        bellGroup.position.y = -1.72 * scale;
+        bellGroup.scale.setScalar(scale);
+        pivot.add(bellGroup);
+        const material = new THREE.MeshPhysicalMaterial({
+          color: index === 0 ? 0x8d6c35 : 0x6f5d36,
+          emissive: 0xd99a37,
+          emissiveIntensity: 0.025,
+          roughness: 0.33,
+          metalness: 0.82,
+          clearcoat: 0.18,
+        });
+        const body = new THREE.Mesh(bellGeometry, material);
+        body.userData.index = index;
+        bellGroup.add(body);
+        hitMeshes.push(body);
+        const crown = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.085, 10, 24), bronzeDark);
+        crown.rotation.x = Math.PI / 2;
+        crown.position.y = 1.48;
+        bellGroup.add(crown);
+        [-0.74, -0.24, 0.26, 0.76].forEach((y) => {
+          const ridge = new THREE.Mesh(ridgeGeometry, bronzeDark);
+          ridge.position.set(0, y, 0.75 - Math.abs(y) * 0.12);
+          bellGroup.add(ridge);
+        });
+        [-0.58, 0, 0.58].forEach((xOffset) => {
+          [-0.52, 0.08, 0.66].forEach((yOffset) => {
+            const stud = new THREE.Mesh(studGeometry, bronzeDark);
+            stud.scale.set(1, 0.82, 0.7);
+            stud.position.set(xOffset, yOffset, 0.78 - Math.abs(yOffset) * 0.1);
+            bellGroup.add(stud);
+          });
+        });
+        const lip = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.07, 12, 48), bronzeDark);
+        lip.scale.x = 0.82;
+        lip.rotation.x = Math.PI / 2;
+        lip.position.y = -1.54;
+        bellGroup.add(lip);
+        pieces.push({ pivot, hit: body, material, index, swing: 0, velocity: 0 });
+      });
+    });
+
+    const auraGeometry = new THREE.RingGeometry(0.65, 0.72, 64);
+    const auraMaterial = new THREE.MeshBasicMaterial({
+      color: 0xf4c96d,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+    aura.position.z = 1.1;
+    rack.add(aura);
+    let auraLife = 0;
+
+    const strike = (index: number) => {
+      const piece = pieces[index];
+      piece.velocity += index < 4 ? 0.055 : 0.042;
+      aura.position.set(piece.pivot.position.x, piece.pivot.position.y - 1.3, 1.05);
+      aura.scale.setScalar(0.5);
+      auraLife = 1;
+      setActive(index);
+      playBellTone(index);
+    };
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
@@ -464,23 +615,23 @@ export function ThreeDialectDial() {
       setPointer(event);
       if (!pressed) {
         raycaster.setFromCamera(pointer, camera);
-        renderer.domElement.style.cursor = raycaster.intersectObjects(rings, false)[0] ? "pointer" : "grab";
+        renderer.domElement.style.cursor = raycaster.intersectObjects(hitMeshes, false)[0] ? "pointer" : "grab";
         return;
       }
       const dx = event.clientX - startX;
       const dy = event.clientY - startY;
       moved = Math.max(moved, Math.hypot(dx, dy));
       targetRotation.set(
-        THREE.MathUtils.clamp(baseRotation.x + dy * 0.0045, -0.58, 0.34),
-        THREE.MathUtils.clamp(dx * 0.0045, -0.62, 0.62),
+        THREE.MathUtils.clamp(baseRotation.x + dy * 0.0038, -0.38, 0.24),
+        THREE.MathUtils.clamp(baseRotation.y + dx * 0.0038, -0.48, 0.48),
       );
     };
     const onUp = (event: PointerEvent) => {
       setPointer(event);
       if (moved < 7) {
         raycaster.setFromCamera(pointer, camera);
-        const hit = raycaster.intersectObjects(rings, false)[0];
-        if (hit) setActive(hit.object.userData.index as number);
+        const hit = raycaster.intersectObjects(hitMeshes, false)[0];
+        if (hit) strike(hit.object.userData.index as number);
       }
       pressed = false;
       targetRotation.copy(baseRotation);
@@ -489,6 +640,7 @@ export function ThreeDialectDial() {
     const onLeave = () => {
       pressed = false;
       targetRotation.copy(baseRotation);
+      pointer.set(3, 3);
     };
     renderer.domElement.addEventListener("pointerdown", onDown);
     renderer.domElement.addEventListener("pointermove", onMove);
@@ -508,18 +660,26 @@ export function ThreeDialectDial() {
     const clock = new THREE.Clock();
     const animate = () => {
       frame = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
-      ringGroups.forEach((group, index) => {
-        const direction = index % 2 === 0 ? 1 : -1;
-        const targetZ = activeRef.current === index ? direction * 0.42 : 0;
-        group.rotation.z += (targetZ - group.rotation.z) * 0.045;
-        const material = rings[index].material as THREE.MeshPhysicalMaterial;
-        material.emissiveIntensity += ((activeRef.current === index ? 0.6 : 0.05) - material.emissiveIntensity) * 0.09;
-        if (activeRef.current === index) group.position.z = 0.12 + Math.sin(elapsed * 2) * 0.015;
-        else group.position.z += (0 - group.position.z) * 0.08;
+      clock.getDelta();
+      raycaster.setFromCamera(pointer, camera);
+      const hovered = raycaster.intersectObjects(hitMeshes, false)[0]?.object.userData.index as number | undefined;
+      pieces.forEach((piece) => {
+        piece.velocity += -piece.swing * 0.055;
+        piece.velocity *= 0.935;
+        piece.swing += piece.velocity;
+        piece.pivot.rotation.z = piece.swing;
+        const highlighted = hovered === piece.index || activeRef.current === piece.index;
+        piece.material.emissiveIntensity += ((highlighted ? 0.34 : 0.025) - piece.material.emissiveIntensity) * 0.11;
       });
-      dial.rotation.x += (targetRotation.x - dial.rotation.x) * (pressed ? 0.16 : 0.075);
-      dial.rotation.y += (targetRotation.y - dial.rotation.y) * (pressed ? 0.16 : 0.075);
+      if (auraLife > 0.002) {
+        auraLife *= 0.94;
+        aura.scale.multiplyScalar(1.045);
+        auraMaterial.opacity = auraLife * 0.42;
+      } else {
+        auraMaterial.opacity = 0;
+      }
+      rack.rotation.x += (targetRotation.x - rack.rotation.x) * (pressed ? 0.16 : 0.075);
+      rack.rotation.y += (targetRotation.y - rack.rotation.y) * (pressed ? 0.16 : 0.075);
       renderer.render(scene, camera);
     };
     animate();
@@ -530,7 +690,6 @@ export function ThreeDialectDial() {
       renderer.domElement.removeEventListener("pointermove", onMove);
       renderer.domElement.removeEventListener("pointerup", onUp);
       renderer.domElement.removeEventListener("pointerleave", onLeave);
-      textures.forEach((texture) => texture.dispose());
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry.dispose();
@@ -545,8 +704,8 @@ export function ThreeDialectDial() {
 
   return (
     <section className="three-dialect-exhibit">
-      <div className="three-dial-stage" ref={mountRef} />
-      <p className="gesture-hint">拖动字盘查看结构 · 松手自动复位 · 点击圆环切换观察层</p>
+      <div className="three-bell-stage" ref={mountRef} />
+      <p className="gesture-hint">拖动编钟查看 · 松手复位 · 点击钟体打开资料</p>
       <div className="dial-detail" key={active}>
         <p>{DIALECT_ITEMS[active].label}</p>
         <h3>{DIALECT_ITEMS[active].value}</h3>

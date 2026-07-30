@@ -232,7 +232,7 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   margin-top: -10px;
   touch-action: none;
 }
-.three-fan-stage canvas, .three-dial-stage canvas { display: block; width: 100%; height: 100%; }
+.three-fan-stage canvas, .three-dial-stage canvas, .three-bell-stage canvas { display: block; width: 100%; height: 100%; }
 .gesture-hint {
   margin: -10px auto 18px;
   color: #687a70;
@@ -493,11 +493,11 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   min-height: 650px;
   padding: 18px 0 70px;
   display: grid;
-  grid-template-columns: minmax(520px, 1.25fr) minmax(260px, .55fr);
-  gap: 48px;
+  grid-template-columns: minmax(560px, 1.35fr) minmax(260px, .52fr);
+  gap: 34px;
   align-items: center;
 }
-.three-dial-stage {
+.three-bell-stage {
   height: clamp(480px, 68vh, 720px);
   touch-action: none;
 }
@@ -598,7 +598,7 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   .flute-switch { width: 38px; height: 38px; }
   .dialect-dial { min-height: 620px; padding-top: 34px; grid-template-columns: 1fr; gap: 34px; }
   .three-dialect-exhibit { min-height: 650px; padding-top: 0; grid-template-columns: 1fr; gap: 18px; }
-  .three-dial-stage { height: 430px; margin-inline: -18px; }
+  .three-bell-stage { height: 430px; margin-inline: -30px; }
   .three-dialect-exhibit > .gesture-hint { grid-column: 1; margin-top: -42px; }
   .three-dialect-exhibit > .dial-detail { grid-column: 1; grid-row: auto; padding-bottom: 30px; }
   .dial-rings { width: min(520px, 88vw); }

@@ -685,7 +685,7 @@ function DialectDial() {
 
 const META: Record<ExhibitKind, { kicker: string; title: string; hint: string }> = {
   audio: { kicker: "01 · SOUND ARCHIVE", title: "竹笛声纹", hint: "点击音孔改写二进制，金光代表 1。" },
-  dialect: { kicker: "02 · DIALECT OBSERVATION", title: "方言字盘", hint: "转动观察层，查看语音记录切面。" },
+  dialect: { kicker: "02 · DIALECT OBSERVATION", title: "曾侯乙编钟", hint: "轻叩钟体，打开一则方言观察。" },
   field: { kicker: "03 · FIELD NOTES", title: "折扇影集", hint: "点击扇面查看图文，合扇后换一组。" },
 };
 
