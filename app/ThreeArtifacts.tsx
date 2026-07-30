@@ -549,7 +549,7 @@ export function ThreeDialectDial() {
         pivot.add(hanger);
         const bellGroup = new THREE.Group();
         bellGroup.position.y = -1.72 * scale;
-        bellGroup.scale.setScalar(scale);
+        bellGroup.scale.set(scale * 1.22, scale, scale);
         pivot.add(bellGroup);
         const material = new THREE.MeshPhysicalMaterial({
           color: index === 0 ? 0x766038 : 0x625435,
