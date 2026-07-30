@@ -81,6 +81,23 @@ function makePhotoTexture(item: FieldItem) {
   context.arc(265, 455, 16, 0, Math.PI * 2);
   context.fill();
   context.fillRect(247, 472, 36, 98);
+  context.globalAlpha = 0.38;
+  context.strokeStyle = "#f2d58d";
+  context.lineWidth = 3;
+  context.strokeRect(16, 16, 388, 688);
+  context.lineWidth = 1.5;
+  [0, 1, 2].forEach((line) => {
+    context.beginPath();
+    context.moveTo(24, 225 + line * 34);
+    context.bezierCurveTo(110, 185 + line * 28, 268, 300 + line * 18, 396, 228 + line * 36);
+    context.stroke();
+  });
+  context.globalAlpha = 0.7;
+  context.fillStyle = "#8e3e2f";
+  context.fillRect(350, 625, 30, 30);
+  context.strokeStyle = "#edcda1";
+  context.lineWidth = 2;
+  context.strokeRect(355, 630, 20, 20);
   context.globalAlpha = 0.82;
   context.fillStyle = "#f1dfb3";
   context.font = "500 20px serif";
@@ -153,8 +170,8 @@ export function ThreeFanGallery() {
     if (!mount) return;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
-    camera.position.set(0, 1.4, 14);
-    camera.lookAt(0, 1.25, 0);
+    camera.position.set(0, 0.8, 15.8);
+    camera.lookAt(0, 0.2, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -170,7 +187,7 @@ export function ThreeFanGallery() {
     scene.add(rim);
 
     const fan = new THREE.Group();
-    fan.position.y = -3.4;
+    fan.position.y = -2.1;
     fan.rotation.x = -0.08;
     scene.add(fan);
     const baseRotation = new THREE.Vector2(-0.08, 0);
@@ -202,10 +219,10 @@ export function ThreeFanGallery() {
       textures.push(texture);
       const material = new THREE.MeshPhysicalMaterial({
         map: texture,
-        color: 0xd6cfb5,
-        roughness: 0.58,
+        color: 0xffffff,
+        roughness: 0.66,
         metalness: 0.03,
-        clearcoat: 0.16,
+        clearcoat: 0.08,
         emissive: 0x6b4d1f,
         emissiveIntensity: 0,
       });
@@ -214,12 +231,35 @@ export function ThreeFanGallery() {
       leafGroup.add(leaf);
       leaves.push(leaf);
       const rib = new THREE.Mesh(
-        new THREE.BoxGeometry(0.075, 5.75, 0.095),
-        new THREE.MeshStandardMaterial({ color: 0x9a763d, roughness: 0.38, metalness: 0.1 }),
+        new THREE.BoxGeometry(0.11, 7.2, 0.15),
+        new THREE.MeshPhysicalMaterial({
+          color: 0x81562b,
+          roughness: 0.4,
+          metalness: 0.08,
+          clearcoat: 0.18,
+        }),
       );
-      rib.position.y = 2.72;
-      rib.position.z = 0.09;
+      rib.position.y = 2.02;
+      rib.position.z = 0.11;
       leafGroup.add(rib);
+      const rimCap = new THREE.Mesh(
+        new THREE.BoxGeometry(2.7, 0.085, 0.13),
+        new THREE.MeshStandardMaterial({ color: 0xa87836, roughness: 0.42, metalness: 0.12 }),
+      );
+      rimCap.position.set(0, 5.61, 0.12);
+      leafGroup.add(rimCap);
+      const paperBand = new THREE.Mesh(
+        new THREE.BoxGeometry(2.3, 0.026, 0.075),
+        new THREE.MeshStandardMaterial({ color: 0xd1ad61, roughness: 0.6, metalness: 0.08 }),
+      );
+      paperBand.position.set(0, 4.72, 0.13);
+      leafGroup.add(paperBand);
+      const handleCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 0.3, 12),
+        new THREE.MeshStandardMaterial({ color: 0x5d3b20, roughness: 0.48, metalness: 0.08 }),
+      );
+      handleCap.position.set(0, -1.55, 0.11);
+      leafGroup.add(handleCap);
     });
     const rivet = new THREE.Mesh(
       new THREE.CylinderGeometry(0.24, 0.24, 0.34, 32),
