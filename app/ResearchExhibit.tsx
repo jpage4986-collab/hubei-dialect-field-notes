@@ -221,25 +221,162 @@ function BambooFlute() {
     flute.rotation.z = Math.PI / 2;
     flute.rotation.y = -0.08;
     scene.add(flute);
+    const bambooCanvas = document.createElement("canvas");
+    bambooCanvas.width = 1024;
+    bambooCanvas.height = 128;
+    const bambooContext = bambooCanvas.getContext("2d");
+    if (bambooContext) {
+      const bambooGradient = bambooContext.createLinearGradient(0, 0, 0, 128);
+      bambooGradient.addColorStop(0, "#5f4a27");
+      bambooGradient.addColorStop(0.28, "#a58447");
+      bambooGradient.addColorStop(0.56, "#72582d");
+      bambooGradient.addColorStop(0.82, "#b09151");
+      bambooGradient.addColorStop(1, "#58431f");
+      bambooContext.fillStyle = bambooGradient;
+      bambooContext.fillRect(0, 0, 1024, 128);
+      bambooContext.globalAlpha = 0.18;
+      for (let line = 0; line < 54; line += 1) {
+        const x = (line * 73 + (line % 7) * 19) % 1024;
+        bambooContext.strokeStyle = line % 3 === 0 ? "#ead498" : "#24190e";
+        bambooContext.lineWidth = line % 4 === 0 ? 2 : 1;
+        bambooContext.beginPath();
+        bambooContext.moveTo(x, 0);
+        bambooContext.bezierCurveTo(x + 12, 34, x - 9, 79, x + 4, 128);
+        bambooContext.stroke();
+      }
+      bambooContext.globalAlpha = 1;
+    }
+    const bambooTexture = new THREE.CanvasTexture(bambooCanvas);
+    bambooTexture.colorSpace = THREE.SRGBColorSpace;
+    bambooTexture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+    const bambooMaterial = new THREE.MeshPhysicalMaterial({
+      map: bambooTexture,
+      color: 0xc09a58,
+      roughness: 0.62,
+      metalness: 0.02,
+      clearcoat: 0.18,
+      clearcoatRoughness: 0.72,
+    });
     const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.52, 0.47, 10.8, 64, 1, false),
-      new THREE.MeshPhysicalMaterial({
-        color: 0x876e3f,
-        roughness: 0.46,
-        metalness: 0.06,
-        clearcoat: 0.2,
-      }),
+      new THREE.CylinderGeometry(0.51, 0.47, 10.8, 96, 8, false),
+      bambooMaterial,
     );
     flute.add(body);
-    [-4.9, 4.9].forEach((y) => {
-      const band = new THREE.Mesh(
-        new THREE.TorusGeometry(0.5, 0.045, 12, 48),
-        new THREE.MeshStandardMaterial({ color: 0xc6a85e, roughness: 0.35 }),
+    [-4.5, -1.75, 1.55, 4.45].forEach((y, index) => {
+      const node = new THREE.Mesh(
+        new THREE.TorusGeometry(0.49 - index * 0.004, 0.035, 12, 64),
+        new THREE.MeshStandardMaterial({
+          color: index % 2 ? 0x6f5429 : 0x8e6d35,
+          roughness: 0.7,
+        }),
       );
-      band.rotation.x = Math.PI / 2;
-      band.position.y = y;
-      flute.add(band);
+      node.rotation.x = Math.PI / 2;
+      node.position.y = y;
+      flute.add(node);
     });
+    [-5.18, 5.18].forEach((y) => {
+      const binding = new THREE.Mesh(
+        new THREE.TorusGeometry(0.49, 0.052, 14, 64),
+        new THREE.MeshStandardMaterial({
+          color: 0xb7913f,
+          metalness: 0.34,
+          roughness: 0.32,
+        }),
+      );
+      binding.rotation.x = Math.PI / 2;
+      binding.position.y = y;
+      flute.add(binding);
+    });
+    const endCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.48, 0.48, 0.2, 64),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x2c2417,
+        roughness: 0.34,
+        metalness: 0.24,
+        clearcoat: 0.42,
+      }),
+    );
+    endCap.position.y = -5.48;
+    flute.add(endCap);
+    const openEnd = new THREE.Mesh(
+      new THREE.TorusGeometry(0.42, 0.085, 18, 64),
+      new THREE.MeshStandardMaterial({ color: 0x352819, roughness: 0.76 }),
+    );
+    openEnd.rotation.x = Math.PI / 2;
+    openEnd.position.y = 5.43;
+    flute.add(openEnd);
+
+    const membrane = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.24, 0.24, 0.035, 40),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xd9cda6,
+        emissive: 0x6b5528,
+        emissiveIntensity: 0.18,
+        roughness: 0.92,
+        transmission: 0.08,
+      }),
+    );
+    membrane.position.set(0, -4.05, 0.49);
+    membrane.rotation.x = Math.PI / 2;
+    flute.add(membrane);
+    const membraneRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.25, 0.025, 10, 48),
+      new THREE.MeshStandardMaterial({ color: 0xb79652, roughness: 0.55 }),
+    );
+    membraneRing.position.copy(membrane.position);
+    flute.add(membraneRing);
+
+    const inscriptionCanvas = document.createElement("canvas");
+    inscriptionCanvas.width = 768;
+    inscriptionCanvas.height = 128;
+    const inscriptionContext = inscriptionCanvas.getContext("2d");
+    if (inscriptionContext) {
+      inscriptionContext.clearRect(0, 0, 768, 128);
+      inscriptionContext.fillStyle = "#342615";
+      inscriptionContext.font = '600 62px "Noto Serif SC", "Songti SC", serif';
+      inscriptionContext.textAlign = "center";
+      inscriptionContext.textBaseline = "middle";
+      inscriptionContext.fillText("乡音楚韵 · 湖北方言", 384, 66);
+    }
+    const inscriptionTexture = new THREE.CanvasTexture(inscriptionCanvas);
+    inscriptionTexture.colorSpace = THREE.SRGBColorSpace;
+    const inscription = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.4, 0.48),
+      new THREE.MeshBasicMaterial({
+        map: inscriptionTexture,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    );
+    inscription.rotation.z = Math.PI / 2;
+    inscription.position.set(0, 0.15, 0.497);
+    flute.add(inscription);
+
+    const tasselMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8c211d,
+      roughness: 0.74,
+    });
+    const cordCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.18, -5.48, 0),
+      new THREE.Vector3(0.34, -5.9, 0.02),
+      new THREE.Vector3(0.08, -6.3, 0.08),
+      new THREE.Vector3(0.28, -6.62, 0),
+    ]);
+    flute.add(new THREE.Mesh(new THREE.TubeGeometry(cordCurve, 40, 0.035, 10, false), tasselMaterial));
+    for (let strand = 0; strand < 9; strand += 1) {
+      const angle = (strand / 9) * Math.PI * 2;
+      const originX = 0.28 + Math.cos(angle) * 0.12;
+      const originZ = Math.sin(angle) * 0.12;
+      const strandCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(originX, -6.62, originZ),
+        new THREE.Vector3(originX * 1.04, -7.08, originZ * 1.18),
+        new THREE.Vector3(originX + Math.sin(strand * 1.7) * 0.05, -7.48, originZ),
+      ]);
+      flute.add(
+        new THREE.Mesh(new THREE.TubeGeometry(strandCurve, 18, 0.022, 7, false), tasselMaterial),
+      );
+    }
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
@@ -405,6 +542,13 @@ function BambooFlute() {
         <button type="button" onClick={playPattern}>播放声纹</button>
       </div>
       <p className="audio-note">当前为交互演示音色，后续可将每组编号映射到真实方言录音。</p>
+      <p className="model-credit">
+        形制参考：
+        <a href="https://www.metmuseum.org/art/collection/search/500635" target="_blank" rel="noreferrer">
+          大都会艺术博物馆藏清代竹笛
+        </a>
+        （公共领域）
+      </p>
     </section>
   );
 }

@@ -407,6 +407,20 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   cursor: pointer;
 }
 .audio-note { width: min(760px, 88vw); margin: 18px auto 0; color: #65766c; font-size: 10px; letter-spacing: .05em; }
+.model-credit {
+  width: min(760px, 88vw);
+  margin: 7px auto 0;
+  color: #53655a;
+  font: 9px/1.6 monospace;
+  letter-spacing: .05em;
+  text-align: right;
+}
+.model-credit a {
+  color: #8e8059;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(181, 154, 85, .24);
+}
+.model-credit a:hover { color: #d1b864; }
 
 .three-dialect-exhibit {
   min-height: 650px;
@@ -511,6 +525,7 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   .flute-bits { width: 100%; }
   .flute-actions { width: 100%; }
   .audio-note { width: 100%; }
+  .model-credit { width: 100%; text-align: left; }
   .dialect-dial { min-height: 620px; padding-top: 34px; grid-template-columns: 1fr; gap: 34px; }
   .three-dialect-exhibit { min-height: 650px; padding-top: 0; grid-template-columns: 1fr; gap: 18px; }
   .three-dial-stage { height: 430px; margin-inline: -18px; }
