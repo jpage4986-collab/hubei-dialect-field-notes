@@ -172,6 +172,7 @@ function BambooFlute({ city }: { city: string }) {
   const [activeHole, setActiveHole] = useState(-1);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [introVisible, setIntroVisible] = useState(false);
+  const touchStartYRef = useRef<number | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
@@ -611,6 +612,18 @@ function BambooFlute({ city }: { city: string }) {
         event.preventDefault();
         setIntroVisible(event.deltaY > 0);
       }}
+      onTouchStart={(event) => {
+        touchStartYRef.current = event.changedTouches[0]?.clientY ?? null;
+      }}
+      onTouchEnd={(event) => {
+        const startY = touchStartYRef.current;
+        const endY = event.changedTouches[0]?.clientY;
+        touchStartYRef.current = null;
+        if (!hasPlayed || startY === null || endY === undefined) return;
+        const distance = startY - endY;
+        if (Math.abs(distance) < 42) return;
+        setIntroVisible(distance > 0);
+      }}
     >
       <div className="flute-stage" ref={mountRef} />
       <article className="voice-intro" aria-hidden={!introVisible} aria-live="polite">
@@ -618,6 +631,16 @@ function BambooFlute({ city }: { city: string }) {
         <h3>{sample.title}</h3>
         <span>{sample.description}</span>
       </article>
+      {hasPlayed && (
+        <button
+          className="voice-mobile-toggle"
+          type="button"
+          aria-expanded={introVisible}
+          onClick={() => setIntroVisible((visible) => !visible)}
+        >
+          {introVisible ? "返回竹笛 ↓" : "查看介绍 ↑"}
+        </button>
+      )}
       <div className="flute-controls">
         <div className="flute-hole-selectors" aria-label="选择六个音孔">
           {bits.map((bit, index) => (
