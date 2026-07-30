@@ -148,12 +148,14 @@ function FanGallery() {
   );
 }
 
-function BambooFlute() {
+function BambooFlute({ city }: { city: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [bits, setBits] = useState([1, 0, 1, 1, 0, 1]);
   const bitsRef = useRef(bits);
   const activeRef = useRef(-1);
   const [activeHole, setActiveHole] = useState(-1);
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const [introVisible, setIntroVisible] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
@@ -168,6 +170,8 @@ function BambooFlute() {
   };
 
   const playPattern = () => {
+    setHasPlayed(true);
+    setIntroVisible(false);
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     const AudioContextClass = window.AudioContext ||
@@ -568,36 +572,32 @@ function BambooFlute() {
     };
   }, []);
 
-  const decimal = bits.reduce((value, bit, index) => value + bit * 2 ** (5 - index), 0);
   return (
-    <section className="flute-exhibit">
+    <section
+      className={`flute-exhibit ${introVisible ? "is-intro-visible" : ""}`}
+      onWheel={(event) => {
+        if (!hasPlayed || Math.abs(event.deltaY) < 4) return;
+        event.preventDefault();
+        setIntroVisible(event.deltaY > 0);
+      }}
+    >
       <div className="flute-stage" ref={mountRef} />
-      <p className="gesture-hint">拖动竹笛查看音孔 · 松手自动复位 · 点击音孔切换 0 / 1</p>
-      <div className="flute-bits" aria-label="六位二进制声纹">
-        {bits.map((bit, index) => (
-          <button
-            className={`${bit ? "is-one" : ""} ${activeHole === index ? "is-playing" : ""}`}
-            key={index}
-            type="button"
-            onClick={() => toggleHole(index)}
-          >
-            <small>{2 ** (5 - index)}</small>
-            <strong>{bit}</strong>
-          </button>
-        ))}
-      </div>
-      <div className="flute-actions">
-        <span>声纹 {bits.join("")} · 编号 {decimal}</span>
-        <button type="button" onClick={playPattern}>播放声纹</button>
-      </div>
-      <p className="audio-note">当前为交互演示音色，后续可将每组编号映射到真实方言录音。</p>
-      <p className="model-credit">
-        形制参考：
-        <a href="https://www.metmuseum.org/art/collection/search/500635" target="_blank" rel="noreferrer">
-          大都会艺术博物馆藏清代竹笛
-        </a>
-        （公共领域）
-      </p>
+      <article className="voice-intro" aria-hidden={!introVisible} aria-live="polite">
+        <p>VOICE ARCHIVE · {city}</p>
+        <h3>乡音，留在一次自然的讲述里。</h3>
+        <span>
+          我们从日常称谓、地方词汇和生活记忆进入访谈，保留讲述中的停顿、语气与环境声。
+          每一组音孔编码，最终都将对应一段真实的湖北方言录音。
+        </span>
+      </article>
+      <button
+        className={`flute-play ${activeHole >= 0 ? "is-playing" : ""}`}
+        type="button"
+        onClick={playPattern}
+        aria-label="播放所选音孔"
+      >
+        播放
+      </button>
     </section>
   );
 }
@@ -653,7 +653,7 @@ export default function ResearchExhibit({ city, kind, onClose }: ExhibitProps) {
         </div>
       </header>
       <main className="exhibit-body">
-        {kind === "audio" && <BambooFlute />}
+        {kind === "audio" && <BambooFlute city={city} />}
         {kind === "dialect" && <ThreeDialectDial />}
         {kind === "field" && <ThreeFanGallery />}
       </main>
