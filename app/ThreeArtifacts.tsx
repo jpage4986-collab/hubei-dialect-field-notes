@@ -231,7 +231,7 @@ export function ThreeFanGallery() {
       leafGroup.add(leaf);
       leaves.push(leaf);
       const rib = new THREE.Mesh(
-        new THREE.BoxGeometry(0.11, 7.2, 0.15),
+        new THREE.BoxGeometry(0.1, 5.9, 0.15),
         new THREE.MeshPhysicalMaterial({
           color: 0x81562b,
           roughness: 0.4,
@@ -239,8 +239,8 @@ export function ThreeFanGallery() {
           clearcoat: 0.18,
         }),
       );
-      rib.position.y = 2.02;
-      rib.position.z = 0.11;
+      rib.position.set(0.8, 2.75, 0.11);
+      rib.rotation.z = -0.19;
       leafGroup.add(rib);
       const rimCap = new THREE.Mesh(
         new THREE.BoxGeometry(2.7, 0.085, 0.13),
@@ -254,12 +254,6 @@ export function ThreeFanGallery() {
       );
       paperBand.position.set(0, 4.72, 0.13);
       leafGroup.add(paperBand);
-      const handleCap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.14, 0.3, 12),
-        new THREE.MeshStandardMaterial({ color: 0x5d3b20, roughness: 0.48, metalness: 0.08 }),
-      );
-      handleCap.position.set(0, -1.55, 0.11);
-      leafGroup.add(handleCap);
     });
     const rivet = new THREE.Mesh(
       new THREE.CylinderGeometry(0.24, 0.24, 0.34, 32),
