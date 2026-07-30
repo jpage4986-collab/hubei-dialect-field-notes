@@ -444,12 +444,12 @@ export function ThreeDialectDial() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 0.94;
     renderer.domElement.setAttribute("aria-label", "可旋转并点击敲击的三维曾侯乙编钟");
     renderer.domElement.setAttribute("role", "img");
     mount.appendChild(renderer.domElement);
     scene.add(new THREE.HemisphereLight(0xd9c998, 0x06100c, 1.7));
-    const key = new THREE.DirectionalLight(0xffd98a, 5.6);
+    const key = new THREE.DirectionalLight(0xffd98a, 4.25);
     key.position.set(-5, 7, 9);
     scene.add(key);
     const rim = new THREE.PointLight(0x6aa883, 8.5, 25);
@@ -533,12 +533,12 @@ export function ThreeDialectDial() {
         bellGroup.scale.setScalar(scale);
         pivot.add(bellGroup);
         const material = new THREE.MeshPhysicalMaterial({
-          color: index === 0 ? 0x8d6c35 : 0x6f5d36,
+          color: index === 0 ? 0x766038 : 0x625435,
           emissive: 0xd99a37,
           emissiveIntensity: 0.025,
-          roughness: 0.33,
-          metalness: 0.82,
-          clearcoat: 0.18,
+          roughness: 0.42,
+          metalness: 0.78,
+          clearcoat: 0.12,
         });
         const body = new THREE.Mesh(bellGeometry, material);
         body.userData.index = index;

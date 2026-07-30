@@ -329,13 +329,16 @@ export default function HubeiMap() {
       renderer.setSize(width, height);
       camera.aspect = width / Math.max(height, 1);
       const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
-      const targetFill = 0.78;
+      const targetFill = width < 720 ? 0.9 : 0.78;
       const provinceWidth = 16.9 * mapScale;
       const provinceHeight = 10.9 * mapScale;
       const fittedDistance = Math.max(
         provinceHeight / (2 * Math.tan(halfFov) * targetFill),
         provinceWidth / (2 * Math.tan(halfFov) * camera.aspect * targetFill),
       );
+      if (scene.fog instanceof THREE.FogExp2) {
+        scene.fog.density = Math.min(0.027, 0.9 / fittedDistance);
+      }
       homePosition.set(0, -fittedDistance * 0.12, fittedDistance);
       if (!selectedRef.current) desiredPosition.copy(homePosition);
       camera.updateProjectionMatrix();
@@ -434,7 +437,7 @@ export default function HubeiMap() {
     <div className={`map-layer ${selected ? "has-selection" : ""}`} ref={mountRef}>
       <div className={`map-prompt ${selected ? "is-hidden" : ""}`}>
         <span>乡音楚韵</span>
-        <small>移动鼠标，选择一座城市</small>
+        <small>探索地图，选择一座城市</small>
       </div>
       <div className={`city-tooltip ${hovered ? "is-visible" : ""}`} aria-live="polite">
         <span>{hovered}</span>
