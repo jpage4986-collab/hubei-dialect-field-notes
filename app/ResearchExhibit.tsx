@@ -387,13 +387,34 @@ function BambooFlute() {
     let dragStartY = 0;
     let dragDistance = 0;
     const holes: THREE.Mesh[] = [];
-    const glows: THREE.PointLight[] = [];
+    const particleCanvas = document.createElement("canvas");
+    particleCanvas.width = 64;
+    particleCanvas.height = 64;
+    const particleContext = particleCanvas.getContext("2d");
+    if (particleContext) {
+      const particleGradient = particleContext.createRadialGradient(32, 32, 0, 32, 32, 31);
+      particleGradient.addColorStop(0, "rgba(255, 246, 192, 1)");
+      particleGradient.addColorStop(0.18, "rgba(255, 211, 92, .96)");
+      particleGradient.addColorStop(0.52, "rgba(224, 151, 36, .46)");
+      particleGradient.addColorStop(1, "rgba(180, 102, 20, 0)");
+      particleContext.fillStyle = particleGradient;
+      particleContext.fillRect(0, 0, 64, 64);
+    }
+    const particleTexture = new THREE.CanvasTexture(particleCanvas);
+    particleTexture.colorSpace = THREE.SRGBColorSpace;
+    const holeOffColor = new THREE.Color(0x101712);
+    const holeOnColor = new THREE.Color(0x4b3517);
+    const particleFields: {
+      points: THREE.Points;
+      positions: Float32Array;
+      velocities: Float32Array;
+      phases: Float32Array;
+    }[] = [];
     const holeX = [-3.1, -1.9, -0.7, 0.7, 1.9, 3.1];
     holeX.forEach((x, index) => {
       const material = new THREE.MeshStandardMaterial({
         color: 0x101712,
-        emissive: 0xd5a63d,
-        emissiveIntensity: 0,
+        emissive: 0x000000,
         roughness: 0.7,
       });
       const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.055, 32), material);
@@ -402,10 +423,41 @@ function BambooFlute() {
       hole.userData.index = index;
       flute.add(hole);
       holes.push(hole);
-      const glow = new THREE.PointLight(0xffc84f, 0, 2.2);
-      glow.position.set(0, x, 0.72);
-      flute.add(glow);
-      glows.push(glow);
+
+      const particleCount = 34;
+      const positions = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount * 3);
+      const phases = new Float32Array(particleCount);
+      for (let particle = 0; particle < particleCount; particle += 1) {
+        const offset = particle * 3;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 0.17;
+        positions[offset] = Math.cos(angle) * radius;
+        positions[offset + 1] = Math.sin(angle) * radius * 0.65;
+        positions[offset + 2] = Math.random() * 0.56;
+        velocities[offset] = (Math.random() - 0.5) * 0.0045;
+        velocities[offset + 1] = (Math.random() - 0.5) * 0.004;
+        velocities[offset + 2] = 0.004 + Math.random() * 0.009;
+        phases[particle] = Math.random() * Math.PI * 2;
+      }
+      const particleGeometry = new THREE.BufferGeometry();
+      particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      const particleMaterial = new THREE.PointsMaterial({
+        map: particleTexture,
+        color: 0xf0b94b,
+        size: 0.075,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const points = new THREE.Points(particleGeometry, particleMaterial);
+      points.position.set(0, x, 0.57);
+      points.frustumCulled = false;
+      points.renderOrder = 4;
+      flute.add(points);
+      particleFields.push({ points, positions, velocities, phases });
     });
 
     const updatePointer = (event: PointerEvent) => {
@@ -483,11 +535,33 @@ function BambooFlute() {
         const material = hole.material as THREE.MeshStandardMaterial;
         const lit = bitsRef.current[index] === 1;
         const active = activeRef.current === index;
-        const targetIntensity = active && lit ? 4.5 : lit ? 1.9 : 0;
-        material.emissiveIntensity += (targetIntensity - material.emissiveIntensity) * 0.12;
-        const pulse = active && lit ? 1 + Math.sin(time * 18) * 0.12 : 1;
+        material.color.lerp(lit ? holeOnColor : holeOffColor, 0.12);
+        const pulse = active && lit ? 1 + Math.sin(time * 18) * 0.1 : 1;
         hole.scale.setScalar(pulse);
-        glows[index].intensity += ((active && lit ? 16 : lit ? 5 : 0) - glows[index].intensity) * 0.11;
+
+        const field = particleFields[index];
+        const particleMaterial = field.points.material as THREE.PointsMaterial;
+        const targetOpacity = active && lit ? 0.98 : lit ? 0.5 : 0;
+        particleMaterial.opacity += (targetOpacity - particleMaterial.opacity) * 0.11;
+        particleMaterial.size += ((active && lit ? 0.13 : 0.075) - particleMaterial.size) * 0.12;
+        const speed = active && lit ? 2.9 : lit ? 1 : 0.22;
+        const travelLimit = active && lit ? 1.72 : 0.92;
+        for (let particle = 0; particle < field.phases.length; particle += 1) {
+          const offset = particle * 3;
+          field.positions[offset] +=
+            field.velocities[offset] * speed + Math.sin(time * 3.2 + field.phases[particle]) * 0.0012;
+          field.positions[offset + 1] +=
+            field.velocities[offset + 1] * speed + Math.cos(time * 2.6 + field.phases[particle]) * 0.0009;
+          field.positions[offset + 2] += field.velocities[offset + 2] * speed;
+          if (field.positions[offset + 2] > travelLimit) {
+            const angle = field.phases[particle] + time;
+            const radius = Math.random() * 0.16;
+            field.positions[offset] = Math.cos(angle) * radius;
+            field.positions[offset + 1] = Math.sin(angle) * radius * 0.65;
+            field.positions[offset + 2] = Math.random() * 0.08;
+          }
+        }
+        (field.points.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
       });
       flute.rotation.x +=
         (targetFluteRotation.x + Math.sin(time * 0.28) * 0.008 - flute.rotation.x) *
@@ -508,12 +582,13 @@ function BambooFlute() {
       renderer.domElement.removeEventListener("pointerup", onUp);
       renderer.domElement.removeEventListener("pointerleave", onLeave);
       scene.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
+        if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
           object.geometry.dispose();
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach((material) => material.dispose());
         }
       });
+      particleTexture.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
