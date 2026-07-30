@@ -219,9 +219,8 @@ function BambooFlute() {
 
     const flute = new THREE.Group();
     flute.rotation.z = Math.PI / 2;
-    flute.rotation.x = -0.24;
-    flute.rotation.y = -0.08;
-    flute.scale.set(0.78, 1.14, 0.78);
+    flute.rotation.x = 0;
+    flute.rotation.y = 0.42;
     scene.add(flute);
     const bambooCanvas = document.createElement("canvas");
     bambooCanvas.width = 1024;
@@ -260,13 +259,13 @@ function BambooFlute() {
       clearcoatRoughness: 0.72,
     });
     const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.51, 0.47, 10.8, 96, 8, false),
+      new THREE.CylinderGeometry(0.4, 0.37, 12.3, 96, 8, false),
       bambooMaterial,
     );
     flute.add(body);
-    [-4.5, -1.75, 1.55, 4.45].forEach((y, index) => {
+    [-5.1, -2, 1.75, 5.05].forEach((y, index) => {
       const node = new THREE.Mesh(
-        new THREE.TorusGeometry(0.49 - index * 0.004, 0.035, 12, 64),
+        new THREE.TorusGeometry(0.385 - index * 0.003, 0.028, 12, 64),
         new THREE.MeshStandardMaterial({
           color: index % 2 ? 0x6f5429 : 0x8e6d35,
           roughness: 0.7,
@@ -276,9 +275,9 @@ function BambooFlute() {
       node.position.y = y;
       flute.add(node);
     });
-    [-5.18, 5.18].forEach((y) => {
+    [-5.88, 5.88].forEach((y) => {
       const binding = new THREE.Mesh(
-        new THREE.TorusGeometry(0.49, 0.052, 14, 64),
+        new THREE.TorusGeometry(0.385, 0.042, 14, 64),
         new THREE.MeshStandardMaterial({
           color: 0xb7913f,
           metalness: 0.34,
@@ -290,7 +289,7 @@ function BambooFlute() {
       flute.add(binding);
     });
     const endCap = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.48, 0.48, 0.2, 64),
+      new THREE.CylinderGeometry(0.38, 0.38, 0.2, 64),
       new THREE.MeshPhysicalMaterial({
         color: 0x2c2417,
         roughness: 0.34,
@@ -298,18 +297,18 @@ function BambooFlute() {
         clearcoat: 0.42,
       }),
     );
-    endCap.position.y = -5.48;
+    endCap.position.y = -6.23;
     flute.add(endCap);
     const openEnd = new THREE.Mesh(
-      new THREE.TorusGeometry(0.42, 0.085, 18, 64),
+      new THREE.TorusGeometry(0.33, 0.067, 18, 64),
       new THREE.MeshStandardMaterial({ color: 0x352819, roughness: 0.76 }),
     );
     openEnd.rotation.x = Math.PI / 2;
-    openEnd.position.y = 5.43;
+    openEnd.position.y = 6.18;
     flute.add(openEnd);
 
     const membrane = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.24, 0.24, 0.035, 40),
+      new THREE.CylinderGeometry(0.19, 0.19, 0.035, 40),
       new THREE.MeshPhysicalMaterial({
         color: 0xd9cda6,
         emissive: 0x6b5528,
@@ -318,11 +317,11 @@ function BambooFlute() {
         transmission: 0.08,
       }),
     );
-    membrane.position.set(0, -4.05, 0.49);
+    membrane.position.set(0, -4.62, 0.39);
     membrane.rotation.x = Math.PI / 2;
     flute.add(membrane);
     const membraneRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.25, 0.025, 10, 48),
+      new THREE.TorusGeometry(0.2, 0.02, 10, 48),
       new THREE.MeshStandardMaterial({ color: 0xb79652, roughness: 0.55 }),
     );
     membraneRing.position.copy(membrane.position);
@@ -333,29 +332,29 @@ function BambooFlute() {
       roughness: 0.74,
     });
     const cordCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.18, -5.48, 0),
-      new THREE.Vector3(0.34, -5.9, 0.02),
-      new THREE.Vector3(0.08, -6.3, 0.08),
-      new THREE.Vector3(0.28, -6.62, 0),
+      new THREE.Vector3(0.14, -6.23, 0),
+      new THREE.Vector3(0.27, -6.58, 0.02),
+      new THREE.Vector3(0.06, -6.94, 0.06),
+      new THREE.Vector3(0.22, -7.24, 0),
     ]);
-    flute.add(new THREE.Mesh(new THREE.TubeGeometry(cordCurve, 40, 0.035, 10, false), tasselMaterial));
+    flute.add(new THREE.Mesh(new THREE.TubeGeometry(cordCurve, 40, 0.028, 10, false), tasselMaterial));
     for (let strand = 0; strand < 9; strand += 1) {
       const angle = (strand / 9) * Math.PI * 2;
-      const originX = 0.28 + Math.cos(angle) * 0.12;
-      const originZ = Math.sin(angle) * 0.12;
+      const originX = 0.22 + Math.cos(angle) * 0.1;
+      const originZ = Math.sin(angle) * 0.1;
       const strandCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(originX, -6.62, originZ),
-        new THREE.Vector3(originX * 1.04, -7.08, originZ * 1.18),
-        new THREE.Vector3(originX + Math.sin(strand * 1.7) * 0.05, -7.48, originZ),
+        new THREE.Vector3(originX, -7.24, originZ),
+        new THREE.Vector3(originX * 1.04, -7.68, originZ * 1.18),
+        new THREE.Vector3(originX + Math.sin(strand * 1.7) * 0.04, -8.06, originZ),
       ]);
       flute.add(
-        new THREE.Mesh(new THREE.TubeGeometry(strandCurve, 18, 0.022, 7, false), tasselMaterial),
+        new THREE.Mesh(new THREE.TubeGeometry(strandCurve, 18, 0.018, 7, false), tasselMaterial),
       );
     }
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2(3, 3);
-    const baseFluteRotation = new THREE.Vector2(-0.24, -0.08);
+    const baseFluteRotation = new THREE.Vector2(0, 0.42);
     const targetFluteRotation = baseFluteRotation.clone();
     let isDragging = false;
     let dragStartX = 0;
@@ -385,15 +384,15 @@ function BambooFlute() {
       velocities: Float32Array;
       phases: Float32Array;
     }[] = [];
-    const holeX = [-3.1, -1.9, -0.7, 0.7, 1.9, 3.1];
+    const holeX = [-3.54, -2.17, -0.8, 0.8, 2.17, 3.54];
     holeX.forEach((x, index) => {
       const material = new THREE.MeshStandardMaterial({
         color: 0x101712,
         emissive: 0x000000,
         roughness: 0.7,
       });
-      const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.055, 32), material);
-      hole.position.set(0, x, 0.49);
+      const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.155, 0.045, 32), material);
+      hole.position.set(0, x, 0.39);
       hole.rotation.x = Math.PI / 2;
       hole.userData.index = index;
       flute.add(hole);
@@ -406,7 +405,7 @@ function BambooFlute() {
       for (let particle = 0; particle < particleCount; particle += 1) {
         const offset = particle * 3;
         const angle = Math.random() * Math.PI * 2;
-        const radius = Math.random() * 0.17;
+        const radius = Math.random() * 0.14;
         positions[offset] = Math.cos(angle) * radius;
         positions[offset + 1] = Math.sin(angle) * radius * 0.65;
         positions[offset + 2] = Math.random() * 0.56;
@@ -428,7 +427,7 @@ function BambooFlute() {
         blending: THREE.AdditiveBlending,
       });
       const points = new THREE.Points(particleGeometry, particleMaterial);
-      points.position.set(0, x, 0.57);
+      points.position.set(0, x, 0.46);
       points.frustumCulled = false;
       points.renderOrder = 4;
       flute.add(points);
@@ -455,8 +454,8 @@ function BambooFlute() {
       const dy = event.clientY - dragStartY;
       dragDistance = Math.max(dragDistance, Math.hypot(dx, dy));
       targetFluteRotation.set(
-        THREE.MathUtils.clamp(baseFluteRotation.x + dy * 0.004, -0.58, 0.16),
-        THREE.MathUtils.clamp(baseFluteRotation.y + dx * 0.0045, -0.62, 0.46),
+        THREE.MathUtils.clamp(baseFluteRotation.x + dy * 0.004, -0.42, 0.42),
+        THREE.MathUtils.clamp(baseFluteRotation.y + dx * 0.0045, -0.08, 0.78),
       );
     };
     const onUp = (event: PointerEvent) => {
@@ -530,7 +529,7 @@ function BambooFlute() {
           field.positions[offset + 2] += field.velocities[offset + 2] * speed;
           if (field.positions[offset + 2] > travelLimit) {
             const angle = field.phases[particle] + time;
-            const radius = Math.random() * 0.16;
+            const radius = Math.random() * 0.14;
             field.positions[offset] = Math.cos(angle) * radius;
             field.positions[offset + 1] = Math.sin(angle) * radius * 0.65;
             field.positions[offset + 2] = Math.random() * 0.08;
