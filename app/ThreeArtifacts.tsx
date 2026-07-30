@@ -123,6 +123,7 @@ export function ThreeFanGallery() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [setIndex, setSetIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [detailVisible, setDetailVisible] = useState(false);
   const selectedRef = useRef(0);
   const openRef = useRef(true);
   const [isOpen, setIsOpen] = useState(true);
@@ -138,6 +139,7 @@ export function ThreeFanGallery() {
 
   const changeSet = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    setDetailVisible(false);
     setIsOpen(false);
     timerRef.current = setTimeout(() => {
       setSetIndex((current) => (current + 1) % FIELD_SETS.length);
@@ -264,7 +266,10 @@ export function ThreeFanGallery() {
       if (moved < 7) {
         raycaster.setFromCamera(pointer, camera);
         const hit = raycaster.intersectObjects(leaves, false)[0];
-        if (hit) setSelectedIndex(hit.object.userData.index as number);
+        if (hit) {
+          setSelectedIndex(hit.object.userData.index as number);
+          setDetailVisible(true);
+        }
       }
       pressed = false;
       targetRotation.copy(baseRotation);
@@ -330,11 +335,24 @@ export function ThreeFanGallery() {
   }, []);
 
   return (
-    <section className="fan-exhibit">
+    <section className={`fan-exhibit ${detailVisible ? "is-detail-visible" : ""}`}>
       <div className="three-fan-stage" ref={mountRef} />
       <p className="gesture-hint">拖动折扇查看侧面 · 松手自动复位</p>
       <button className="fan-change" type="button" onClick={changeSet}>合扇 · 换一组</button>
-      <article className="photo-detail" key={`${setIndex}-${selectedIndex}`} aria-live="polite">
+      <article
+        className="photo-detail floating-layer"
+        key={`${setIndex}-${selectedIndex}`}
+        aria-hidden={!detailVisible}
+        aria-live="polite"
+      >
+        <button
+          className="floating-close"
+          type="button"
+          disabled={!detailVisible}
+          onClick={() => setDetailVisible(false)}
+        >
+          收起
+        </button>
         <div className="photo-detail-image"><PhotoPreview item={items[selectedIndex]} /></div>
         <div>
           <p>FIELD NOTE · {String(selectedIndex + 1).padStart(2, "0")}</p>
@@ -428,10 +446,11 @@ function playBellTone(index: number) {
 export function ThreeDialectDial() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  const activeRef = useRef(active);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const activeRef = useRef<number | null>(null);
   useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
+    activeRef.current = detailVisible ? active : null;
+  }, [active, detailVisible]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -590,6 +609,7 @@ export function ThreeDialectDial() {
       aura.scale.setScalar(0.5);
       auraLife = 1;
       setActive(index);
+      setDetailVisible(true);
       playBellTone(index);
     };
 
@@ -703,14 +723,27 @@ export function ThreeDialectDial() {
   }, []);
 
   return (
-    <section className="three-dialect-exhibit">
+    <section className={`three-dialect-exhibit ${detailVisible ? "is-detail-visible" : ""}`}>
       <div className="three-bell-stage" ref={mountRef} />
       <p className="gesture-hint">拖动编钟查看 · 松手复位 · 点击钟体打开资料</p>
-      <div className="dial-detail" key={active}>
+      <article
+        className="dial-detail floating-layer"
+        key={active}
+        aria-hidden={!detailVisible}
+        aria-live="polite"
+      >
+        <button
+          className="floating-close"
+          type="button"
+          disabled={!detailVisible}
+          onClick={() => setDetailVisible(false)}
+        >
+          收起
+        </button>
         <p>{DIALECT_ITEMS[active].label}</p>
         <h3>{DIALECT_ITEMS[active].value}</h3>
         <span>{DIALECT_ITEMS[active].note}</span>
-      </div>
+      </article>
     </section>
   );
 }

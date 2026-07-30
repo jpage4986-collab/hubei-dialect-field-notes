@@ -37,12 +37,18 @@ export default function HubeiMap() {
   const focusRef = useRef<(name: string | null) => void>(() => undefined);
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [storyClosing, setStoryClosing] = useState(false);
   const [activeSection, setActiveSection] = useState<ExhibitKind | null>(null);
   const selectedRef = useRef<string | null>(null);
+  const storyCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     selectedRef.current = selected;
   }, [selected]);
+
+  useEffect(() => () => {
+    if (storyCloseTimerRef.current) clearTimeout(storyCloseTimerRef.current);
+  }, []);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -133,6 +139,7 @@ export default function HubeiMap() {
 
     const setFocus = (name: string | null) => {
       setActiveSection(null);
+      setStoryClosing(false);
       setSelected(name);
       selectedRef.current = name;
       if (!name) {
@@ -432,6 +439,13 @@ export default function HubeiMap() {
   }, []);
 
   const story = selected ? CITY_STORIES[selected] ?? fallbackStory(selected) : null;
+  const closeStory = () => {
+    if (storyClosing) return;
+    setStoryClosing(true);
+    storyCloseTimerRef.current = setTimeout(() => {
+      focusRef.current(null);
+    }, 430);
+  };
 
   return (
     <div className={`map-layer ${selected ? "has-selection" : ""}`} ref={mountRef}>
@@ -443,10 +457,13 @@ export default function HubeiMap() {
         <span>{hovered}</span>
         {hovered && !hovered.includes("失败") && <small>点击进入</small>}
       </div>
-      <aside className={`city-story ${selected ? "is-visible" : ""}`} aria-hidden={!selected}>
+      <aside
+        className={`city-story ${selected ? "is-visible" : ""} ${storyClosing ? "is-closing" : ""}`}
+        aria-hidden={!selected}
+      >
         {story && (
           <>
-            <button className="story-close" type="button" onClick={() => focusRef.current(null)}>
+            <button className="story-close" type="button" onClick={closeStory}>
               ← 返回地图
             </button>
             <p className="story-kicker">DIALECT FIELD NOTES · {selected}</p>

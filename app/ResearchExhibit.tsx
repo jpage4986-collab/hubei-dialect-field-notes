@@ -691,10 +691,23 @@ const META: Record<ExhibitKind, { kicker: string; title: string; hint: string }>
 
 export default function ResearchExhibit({ city, kind, onClose }: ExhibitProps) {
   const meta = META[kind];
+  const [leaving, setLeaving] = useState(false);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+  }, []);
+
+  const closeWithTransition = () => {
+    if (leaving) return;
+    setLeaving(true);
+    leaveTimerRef.current = setTimeout(onClose, 460);
+  };
+
   return (
-    <div className="research-exhibit">
+    <div className={`research-exhibit ${leaving ? "is-leaving" : ""}`}>
       <header className="exhibit-header">
-        <button type="button" onClick={onClose}>← 返回城市成果</button>
+        <button type="button" onClick={closeWithTransition}>← 返回城市成果</button>
         <div>
           <p>{meta.kicker} · {city}</p>
           <h2>{meta.title}</h2>
