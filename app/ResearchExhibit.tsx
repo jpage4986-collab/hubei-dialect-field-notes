@@ -740,7 +740,7 @@ export default function ResearchExhibit({ city, kind, onClose }: ExhibitProps) {
       <main className="exhibit-body">
         {kind === "audio" && <BambooFlute city={city} />}
         {kind === "dialect" && <ThreeDialectDial />}
-        {kind === "field" && <ThreeFanGallery />}
+        {kind === "field" && <ThreeFanGallery city={city} />}
       </main>
     </div>
   );

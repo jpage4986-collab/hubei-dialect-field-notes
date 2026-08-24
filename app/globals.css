@@ -430,6 +430,13 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   border: 1px solid rgba(222, 215, 194, .1);
   box-shadow: 0 28px 80px rgba(0, 0, 0, .2);
 }
+.field-photo-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.86) contrast(1.04);
+}
 .floating-layer {
   text-shadow: 0 3px 24px rgba(2, 10, 7, .72);
 }
@@ -493,9 +500,28 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   background: #08140f;
   transform: translateX(-50%);
 }
-.photo-detail p, .dial-detail p { margin: 0 0 15px; color: var(--gold); font: 500 9px/1.3 monospace; letter-spacing: .2em; }
+.photo-detail > div:last-child > p, .dial-detail > p { margin: 0 0 15px; color: var(--gold); font: 500 9px/1.3 monospace; letter-spacing: .2em; }
 .photo-detail h3, .dial-detail h3 { margin: 0 0 18px; color: var(--paper); font: 500 clamp(30px, 4vw, 52px)/1.13 var(--serif); letter-spacing: .025em; }
-.photo-detail span, .dial-detail span { color: #9ba99f; font: 13px/1.95 var(--serif); }
+.photo-detail span { color: #9ba99f; font: 13px/1.95 var(--serif); }
+.dial-copy { display: grid; gap: 18px; }
+.dial-copy p {
+  margin: 0;
+  color: #aab5ad;
+  font: 13px/1.9 var(--serif);
+  letter-spacing: .015em;
+}
+.dial-copy p + p {
+  padding-top: 17px;
+  border-top: 1px solid rgba(202, 185, 132, .16);
+  color: #8f9e94;
+}
+.dial-copy b {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--gold);
+  font: 500 9px/1.3 monospace;
+  letter-spacing: .2em;
+}
 
 .flute-exhibit {
   position: relative;
@@ -647,7 +673,7 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
   z-index: 3;
   top: 50%;
   right: clamp(36px, 8vw, 118px);
-  width: min(410px, 34vw);
+  width: min(520px, 42vw);
   max-width: none;
   padding-left: 38px;
   border-left: 1px solid var(--hairline);
@@ -872,6 +898,14 @@ body:has(.map-layer.has-selection) .author-trigger { opacity: 0; pointer-events:
     left: 22px;
     width: auto;
     padding: 0 0 0 24px;
+    max-height: none;
+    overflow: visible;
+  }
+  .three-dialect-exhibit .dial-copy {
+    max-height: 48vh;
+    padding-right: 7px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .three-dialect-exhibit.is-detail-visible .three-bell-stage {
     transform: scale(1.12) translateY(3%);

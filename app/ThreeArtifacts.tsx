@@ -6,137 +6,110 @@ import * as THREE from "three";
 type FieldItem = {
   title: string;
   caption: string;
-  tone: number;
+  image: string;
 };
 
-const FIELD_SETS: FieldItem[][] = [
-  [
-    { title: "清晨入村", caption: "沿街记录日常称谓与第一轮自然对话。临时影像，待替换为项目原片。", tone: 0 },
-    { title: "街巷访谈", caption: "在熟悉的生活场景中完成半结构式访谈。临时影像，待替换为项目原片。", tone: 1 },
-    { title: "录音准备", caption: "校准设备，记录采样位置、时间与受访者信息。临时影像，待替换为项目原片。", tone: 2 },
-    { title: "方言词表", caption: "从常用词、地方物产和亲属称谓进入语言现场。临时影像，待替换为项目原片。", tone: 3 },
-    { title: "围坐闲谈", caption: "让叙述回到自然语速，保留停顿、笑声与现场环境音。临时影像，待替换为项目原片。", tone: 4 },
-    { title: "暮色归档", caption: "当天整理录音、照片和田野笔记，建立材料索引。临时影像，待替换为项目原片。", tone: 5 },
-  ],
-  [
-    { title: "码头旧声", caption: "从行业称呼追索城市生活中的旧词与新义。临时影像，待替换为项目原片。", tone: 5 },
-    { title: "集市采样", caption: "记录叫卖、议价和熟人交谈中的真实语音。临时影像，待替换为项目原片。", tone: 3 },
-    { title: "家中口述", caption: "围绕迁徙、家庭和地方记忆展开口述。临时影像，待替换为项目原片。", tone: 1 },
-    { title: "语音复核", caption: "邀请讲述者回听片段，核对词义与使用语境。临时影像，待替换为项目原片。", tone: 4 },
-    { title: "地名寻访", caption: "沿地名线索寻找方言保存较完整的社区。临时影像，待替换为项目原片。", tone: 0 },
-    { title: "夜间整理", caption: "为照片、音频和转写文本建立互相对应的编号。临时影像，待替换为项目原片。", tone: 2 },
-  ],
-];
+const ASSET_BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-const PALETTES = [
-  ["#c4a66b", "#4e725c", "#13271f"],
-  ["#819c89", "#826c4c", "#14261e"],
-  ["#c3a872", "#6c8170", "#24372c"],
-  ["#89a392", "#58725e", "#14281f"],
-  ["#b39a74", "#496657", "#10231b"],
-  ["#9c8968", "#6b8068", "#172a21"],
-];
+const item = (city: string, index: number, title: string, caption: string): FieldItem => ({
+  title,
+  caption,
+  image: `/field-notes/${city}-${String(index).padStart(2, "0")}.webp`,
+});
+
+const CITY_FIELD_SETS: Record<string, FieldItem[][]> = {
+  武汉: [
+    [
+      item("wuhan", 1, "江城抵达", "从列车进入城市的连续视野开始记录，观察交通流动如何改变方言的接触边界。"),
+      item("wuhan", 2, "城市天际线", "高密度城区是多种口音并置的空间，也为普通话与武汉话的语码转换提供现场。"),
+      item("wuhan", 3, "街区步行", "沿商业街区进行语言景观观察，记录招牌、叫卖与日常交谈中的地方表达。"),
+      item("wuhan", 4, "旧街入口", "以街巷为节点追踪地方称谓和空间记忆，补充正式访谈之外的生活语料。"),
+      item("wuhan", 5, "市井声场", "在人群密集处辨认语速、音量与句末语气，保留真实交流中的节奏特征。"),
+      item("wuhan", 6, "现代江城", "新城区的人员流动强化了口音接触，也使青年群体呈现更灵活的语言选择。"),
+    ],
+    [
+      item("wuhan", 7, "文化空间", "公共文化建筑构成城市记忆的坐标，语言材料也在展览、讲解与日常使用中被重新组织。"),
+      item("wuhan", 8, "实践起点", "团队在出发前统一访谈提纲、录音编号和知情同意流程，确保材料可追溯。"),
+      item("wuhan", 9, "站前观察", "交通枢纽中的短时交流能反映不同地域口音的接触、调适与身份识别。"),
+      item("wuhan", 10, "地方建筑", "建筑名称、方位词与市民叙述共同构成可被听见的城市空间。"),
+      item("wuhan", 11, "公共叙事", "通过场馆与公共标识核对地名读法、历史称谓及其当代使用方式。"),
+      item("wuhan", 12, "行程归档", "将拍摄地点、访问时间与音频编号关联，为后续转写和方言比较建立索引。"),
+    ],
+  ],
+  十堰: [
+    [
+      item("shiyan", 1, "山城途中", "列车穿行山地的空间经验，为理解十堰方言内部的地理差异提供背景。"),
+      item("shiyan", 2, "城区入口", "从城市交通节点进入调查现场，记录公共空间中的口音混合与交际策略。"),
+      item("shiyan", 3, "实践驻点", "团队确认当日样本对象、访问路线与设备状态，建立统一的田野记录格式。"),
+      item("shiyan", 4, "山地街区", "地形与社区分布影响交往半径，也可能强化不同片区之间的语音差异。"),
+      item("shiyan", 5, "社区边界", "在生活区入口观察熟人网络与公共交往，寻找自然对话的采样机会。"),
+      item("shiyan", 6, "十堰东站", "交通枢纽连接鄂西北与外部城市，是观察人口流动和口音调适的重要节点。"),
+    ],
+    [
+      item("shiyan", 7, "夜间抵达", "抵达后立即核对照片、录音和访谈日志，避免跨日整理造成材料错位。"),
+      item("shiyan", 8, "暮色站房", "站前交谈常呈现短时、目的明确的语言选择，可与家庭场景中的自然语流对照。"),
+      item("shiyan", 9, "沿途地貌", "山地聚落的距离和通达性，是解释方言差异时不可忽略的社会地理变量。"),
+      item("shiyan", 10, "再次核验", "在十堰东站复核交通信息与采样计划，为不同调查点建立清晰的行程链。"),
+      item("shiyan", 11, "田野夜记", "当日用简短备忘录记录语境、人物关系和观察者判断，作为音频文本的补充。"),
+      item("shiyan", 12, "材料汇合", "集中整理车站、社区和访谈影像，形成可按地点与主题交叉检索的资料组。"),
+    ],
+  ],
+  黄冈: [
+    [
+      item("huanggang", 1, "浠水抵达", "以浠水站为调查线索之一，将交通节点与周边社区的语言使用联系起来。"),
+      item("huanggang", 2, "小组研判", "进入访谈前讨论受访者背景、提问顺序和记录分工，减少调查者对自然表达的干扰。"),
+      item("huanggang", 3, "入户记录", "在家庭空间完成基础信息登记，并说明录音用途、匿名方式和撤回权利。"),
+      item("huanggang", 4, "围坐访谈", "半结构式访谈从生活史进入方言词汇，再逐步过渡到更自然的叙述语流。"),
+      item("huanggang", 5, "多人对话", "多人交谈能呈现话轮转换、称谓选择和熟人之间更稳定的地方语音特征。"),
+      item("huanggang", 6, "词表核对", "用词表获得可比样本，同时允许讲述者补充本地词义、搭配和使用限制。"),
+    ],
+    [
+      item("huanggang", 7, "夜行浠水", "夜间抵达与离开构成调查的时间坐标，也帮助复原每份材料的采集顺序。"),
+      item("huanggang", 8, "站前广场", "公共空间的广播、问路和短时交谈，为正式访谈提供不同风格的对照材料。"),
+      item("huanggang", 9, "地方门户", "站名与地名读法具有稳定的地方认同意义，可用于观察普通话化程度。"),
+      item("huanggang", 10, "建筑与地名", "结合实体空间核对地方称谓，避免仅凭词表脱离真实指称和使用语境。"),
+      item("huanggang", 11, "社区入口", "沿社区与村落边界寻找不同年龄层讲述者，建立具有代际可比性的样本。"),
+      item("huanggang", 12, "现场复盘", "把影像、音频、词表和观察笔记统一编号，记录需要二次核实的疑点。"),
+    ],
+  ],
+  黄石: [
+    [
+      item("huangshi", 1, "家庭场景", "家庭空间有利于降低访谈压力，使讲述者回到更接近日常交流的语言风格。"),
+      item("huangshi", 2, "街面寻访", "团队通过社区走访寻找合适的讲述者，并记录熟人网络提供的地点线索。"),
+      item("huangshi", 3, "路线讨论", "现场及时调整访问顺序，把可用时间优先分配给具有代际差异的样本。"),
+      item("huangshi", 4, "社区交谈", "在室外自然场景中观察招呼语、指路表达和地方词汇的即时使用。"),
+      item("huangshi", 5, "同行记录", "调查员分别承担提问、录音、摄影与笔记，减少单一记录遗漏的风险。"),
+      item("huangshi", 6, "步行调查", "步行路径串联居住区与公共空间，帮助理解语言材料对应的社会环境。"),
+    ],
+    [
+      item("huangshi", 7, "山林路径", "自然地貌和聚落通道影响居民往来，也为解释地方语音边界提供参照。"),
+      item("huangshi", 8, "村落院落", "院落中的生产生活器物能够引出地方物名、动作词和传统经验叙述。"),
+      item("huangshi", 9, "生活现场", "不预设答案地观察日常活动，让词汇从具体物件和动作中自然出现。"),
+      item("huangshi", 10, "口述环境", "家庭陈设、人物关系与在场者反应都会影响叙述方式，应与录音一并记录。"),
+      item("huangshi", 11, "城市夜景", "城市公共空间呈现工业记忆与现代生活的叠合，也映照地方身份的表达。"),
+      item("huangshi", 12, "夜间回访", "在较轻松的时段补充遗漏问题，并邀请讲述者解释前次材料中的地方词。"),
+    ],
+  ],
+};
 
 function makePhotoTexture(item: FieldItem) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 420;
-  canvas.height = 720;
-  const context = canvas.getContext("2d");
-  if (!context) return new THREE.CanvasTexture(canvas);
-  const palette = PALETTES[item.tone % PALETTES.length];
-  const gradient = context.createLinearGradient(0, 0, 0, 720);
-  gradient.addColorStop(0, palette[0]);
-  gradient.addColorStop(0.58, palette[1]);
-  gradient.addColorStop(1, palette[2]);
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, 420, 720);
-  context.globalAlpha = 0.48;
-  context.fillStyle = "#f2d58d";
-  context.beginPath();
-  context.arc(310, 155, 72, 0, Math.PI * 2);
-  context.fill();
-  context.globalAlpha = 0.92;
-  context.fillStyle = palette[1];
-  context.beginPath();
-  context.moveTo(0, 430);
-  context.quadraticCurveTo(120, 250, 235, 430);
-  context.quadraticCurveTo(340, 310, 420, 415);
-  context.lineTo(420, 720);
-  context.lineTo(0, 720);
-  context.fill();
-  context.fillStyle = palette[2];
-  context.beginPath();
-  context.moveTo(0, 540);
-  context.quadraticCurveTo(120, 405, 245, 540);
-  context.quadraticCurveTo(340, 470, 420, 520);
-  context.lineTo(420, 720);
-  context.lineTo(0, 720);
-  context.fill();
-  context.fillStyle = "#09150f";
-  context.beginPath();
-  context.arc(185, 430, 19, 0, Math.PI * 2);
-  context.fill();
-  context.fillRect(164, 450, 42, 120);
-  context.beginPath();
-  context.arc(265, 455, 16, 0, Math.PI * 2);
-  context.fill();
-  context.fillRect(247, 472, 36, 98);
-  context.globalAlpha = 0.38;
-  context.strokeStyle = "#f2d58d";
-  context.lineWidth = 3;
-  context.strokeRect(16, 16, 388, 688);
-  context.lineWidth = 1.5;
-  [0, 1, 2].forEach((line) => {
-    context.beginPath();
-    context.moveTo(24, 225 + line * 34);
-    context.bezierCurveTo(110, 185 + line * 28, 268, 300 + line * 18, 396, 228 + line * 36);
-    context.stroke();
-  });
-  context.globalAlpha = 0.7;
-  context.fillStyle = "#8e3e2f";
-  context.fillRect(350, 625, 30, 30);
-  context.strokeStyle = "#edcda1";
-  context.lineWidth = 2;
-  context.strokeRect(355, 630, 20, 20);
-  context.globalAlpha = 0.82;
-  context.fillStyle = "#f1dfb3";
-  context.font = "500 20px serif";
-  context.fillText(item.title, 28, 54);
-  context.font = "12px monospace";
-  context.fillText("FIELD NOTE / TEMP", 28, 82);
-  const image = context.getImageData(0, 0, 420, 720);
-  for (let index = 0; index < image.data.length; index += 4) {
-    const grain = (Math.random() - 0.5) * 14;
-    image.data[index] += grain;
-    image.data[index + 1] += grain;
-    image.data[index + 2] += grain;
-  }
-  context.putImageData(image, 0, 0);
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new THREE.TextureLoader().load(`${ASSET_BASE}${item.image}`);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = 8;
   return texture;
 }
 
 function PhotoPreview({ item }: { item: FieldItem }) {
-  const palette = PALETTES[item.tone % PALETTES.length];
   return (
-    <div
-      className="generated-photo-preview"
-      style={{
-        background: `radial-gradient(circle at 75% 22%, ${palette[0]} 0 8%, transparent 22%), linear-gradient(155deg, ${palette[0]}, ${palette[1]} 54%, ${palette[2]})`,
-      }}
-      role="img"
-      aria-label={`${item.title}临时影像`}
-    >
-      <span>FIELD NOTE / TEMP</span>
-      <i aria-hidden="true" />
-      <b aria-hidden="true" />
-    </div>
+    <img
+      className="field-photo-preview"
+      src={`${ASSET_BASE}${item.image}`}
+      alt={item.title}
+    />
   );
 }
 
-export function ThreeFanGallery() {
+export function ThreeFanGallery({ city }: { city: string }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [setIndex, setSetIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -145,7 +118,9 @@ export function ThreeFanGallery() {
   const openRef = useRef(true);
   const [isOpen, setIsOpen] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const items = FIELD_SETS[setIndex];
+  const cityKey = city.replace(/市$/, "");
+  const fieldSets = CITY_FIELD_SETS[cityKey] ?? CITY_FIELD_SETS.武汉;
+  const items = fieldSets[setIndex % fieldSets.length];
 
   useEffect(() => {
     openRef.current = isOpen;
@@ -159,7 +134,7 @@ export function ThreeFanGallery() {
     setDetailVisible(false);
     setIsOpen(false);
     timerRef.current = setTimeout(() => {
-      setSetIndex((current) => (current + 1) % FIELD_SETS.length);
+      setSetIndex((current) => (current + 1) % fieldSets.length);
       setSelectedIndex(0);
       setIsOpen(true);
     }, 760);
@@ -209,6 +184,16 @@ export function ThreeFanGallery() {
       bevelThickness: 0.018,
       bevelSegments: 2,
     });
+    const leafPositions = leafGeometry.getAttribute("position") as THREE.BufferAttribute;
+    const leafUvs = leafGeometry.getAttribute("uv") as THREE.BufferAttribute;
+    for (let vertex = 0; vertex < leafPositions.count; vertex += 1) {
+      leafUvs.setXY(
+        vertex,
+        THREE.MathUtils.clamp((leafPositions.getX(vertex) + 1.36) / 2.72, 0, 1),
+        THREE.MathUtils.clamp(leafPositions.getY(vertex) / 5.65, 0, 1),
+      );
+    }
+    leafUvs.needsUpdate = true;
     items.forEach((item, index) => {
       const leafGroup = new THREE.Group();
       leafGroup.rotation.z = 0;
@@ -401,43 +386,51 @@ export function ThreeFanGallery() {
 const DIALECT_ITEMS = [
   {
     label: "01 · 声母",
-    value: "送气与不送气",
-    note: "比较不同年龄讲述者在自然语流中的起音差异，观察塞音、塞擦音在地方口音中的分合。",
+    value: "清音系统与发音部位",
+    note: "湖北境内方言的声母格局既受官话共同特征支配，也保留明显的地域差异。考察重点包括塞音、塞擦音的送气对立，古全浊声母今读送气或不送气的分化，以及舌尖前音、舌尖后音和舌面音之间的合流。武汉、黄冈、黄石与鄂西北地区在知庄章组、精见组等历史来源上的对应关系并不完全相同。",
+    method: "以声母最小对立词和同源字表为基础，结合自由交谈中的自然语流；用声谱图观察爆破时刻与嗓音起始时间（VOT），同时记录年龄、教育经历和语言使用场景。",
   },
   {
     label: "02 · 韵母",
-    value: "开口度与鼻尾",
-    note: "把同一词项的韵母变化放回具体地点与语境，记录前后鼻音和入声韵尾的地域差异。",
+    value: "元音格局与韵尾演变",
+    note: "韵母调查关注单元音的舌位与圆唇度、复元音的滑动方向，以及鼻韵尾和入声遗迹。不同地点可能出现前后鼻音合并、韵腹高化或低化、介音脱落等现象；这些变化往往同时受到地理接触、普通话输入和本地方言内部演变的影响。",
+    method: "选取覆盖开齐合撮四呼的常用字词，测量稳定段的第一、第二共振峰（F1/F2），再用同一讲述者的词表读音与自然话语互证，避免把风格差异误判为地域差异。",
   },
   {
     label: "03 · 声调",
-    value: "调值与连读",
-    note: "观察单字调进入句子后产生的节奏和调型变化，同时保留自然停顿与语气。",
+    value: "调类、调值与连读变调",
+    note: "声调不能只看孤立单字。中古平、上、去、入各调类在湖北方言中的今读分化，与清浊条件、音节结构和区域接触有关；进入双音节词和句子后，基频曲线还会受到重音、语速、句末语气与前后音节的共同调节。",
+    method: "先建立单字调的五度标记，再采集双音节组合和完整陈述句；对基频进行说话人归一化，区分音系性的变调规则与生理音域、焦点重音造成的语音变化。",
   },
   {
     label: "04 · 词汇",
-    value: "地方词项",
-    note: "从亲属称谓、饮食、农事与街巷生活切入，辨认仍在使用和正在消退的地方词。",
+    value: "地方词项与语义系统",
+    note: "地方词汇承载具体的生产方式、亲属网络和生活经验。调查不仅记录“怎么说”，还要确认词义范围、感情色彩、搭配限制和使用对象；同一个形式在邻近地区可能对应不同意义，同一概念也可能因年龄和职业产生多套表达。",
+    method: "以亲属称谓、饮食、农事、身体动作和日常器物为语义场，通过实物指认、情境提问与自由叙述交叉核验，并标注词项的活跃程度、替代形式和使用者年龄层。",
   },
   {
     label: "05 · 语流",
-    value: "连读与节奏",
-    note: "对照词表读音与自由交谈，记录弱化、同化、吞音以及句末语气的真实表现。",
+    value: "连读音变与韵律组织",
+    note: "自然语流中的方言特征常比词表读音更丰富。音节在连续表达中会发生弱化、同化、增音、脱落与边界重组；停顿位置、节奏单位和句末语气词则共同塑造地方口音的听感。仅依靠逐字朗读，容易遗漏这些系统性现象。",
+    method: "保留访谈中的完整话轮，按语调短语切分并制作精细转写；将同一词项在朗读、复述和自由交谈中的实现进行对照，记录语速与信息结构对音变的影响。",
   },
   {
     label: "06 · 代际",
-    value: "口音的迁移",
-    note: "比较老、中、青三代讲述者，寻找普通话、人口流动与媒介环境留下的语言痕迹。",
+    value: "语言变异与代际迁移",
+    note: "老、中、青三代之间的差异可以揭示正在进行的语言变化。青年讲述者往往在学校、网络和跨城流动中增加普通话使用，但这种变化并非简单的“方言消失”：地方特征可能转移到语调、语气词或身份表达中，并在亲密场景里重新出现。",
+    method: "采用表观时间研究设计，在性别、教育与社区背景尽量可比的条件下分层取样；分别记录家庭、同伴和正式访谈场景，分析语言选择与社会身份之间的关联。",
   },
   {
     label: "07 · 场景",
-    value: "谁在何处说",
-    note: "同一个人面对家人、邻里和访谈者时会切换表达方式，语境也是方言材料的一部分。",
+    value: "语域、语码转换与身份",
+    note: "讲述者会根据对象、地点与话题调整表达方式：面对家人可能使用更密集的地方形式，面对陌生访谈者则趋向普通话；当话题转向童年、劳动或地方记忆时，方言又可能自然回归。这种切换本身就是重要的社会语言学材料。",
+    method: "在取得同意后记录不同参与者组合的对话，并同步写下人物关系、场所、话题与在场者反应；分析切换发生的位置及其交际功能，而不是把所有非普通话形式简单归为“口音”。",
   },
   {
     label: "08 · 记忆",
-    value: "声音中的地方",
-    note: "把发音、故事与具体地点相互索引，让方言不仅是音系样本，也是可被讲述的地方记忆。",
+    value: "口述传统与地方记忆",
+    note: "方言材料既是语言结构的证据，也是地方知识的载体。地名读法、行业称谓、童谣、迁徙故事与家庭叙事把声音连接到具体空间和代际经验；保存这些材料时，需要同时尊重讲述者的解释权、隐私与文化语境。",
+    method: "将音频、照片、地点、人物关系和关键词建立同一索引，保留原始录音与校订转写两个版本；对涉及个人经历的材料进行匿名化，并记录授权范围与后续使用条件。",
   },
 ];
 
@@ -776,7 +769,10 @@ export function ThreeDialectDial() {
         </button>
         <p>{DIALECT_ITEMS[active].label}</p>
         <h3>{DIALECT_ITEMS[active].value}</h3>
-        <span>{DIALECT_ITEMS[active].note}</span>
+        <div className="dial-copy">
+          <p>{DIALECT_ITEMS[active].note}</p>
+          <p><b>观察方法</b>{DIALECT_ITEMS[active].method}</p>
+        </div>
       </article>
     </section>
   );
